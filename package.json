@@ -3,13 +3,12 @@
   "name": "hyperdash-dev",
   "title": "hyperDASH (hd) Dev",
   "version": "0.3.0",
-  "private": true,
   "description": "hyperDASH (hd): Obsidian Projects & Tasks (Bases-compatible, tag-only todos).",
   "icon": "hd-icon.png",
   "author": "your-name",
+  "license": "MIT",
   "categories": [
-    "Productivity",
-    "Note Taking"
+    "Productivity"
   ],
   "permissions": [
     "filesystem"
@@ -26,11 +25,12 @@
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
       "mode": "view",
       "icon": "hd-icon.png",
-      "path": "dist/main.js",
+      "path": "dist/browse.js",
       "preferences": [
         {
           "name": "vaultPath",
           "type": "textfield",
+          "required": true,
           "title": "Vault Path",
           "description": "Absolute path to your Obsidian vault folder",
           "placeholder": "/Users/ja/Obsidian/JA"
@@ -38,6 +38,7 @@
         {
           "name": "basesTodoFile",
           "type": "textfield",
+          "required": false,
           "title": "Bases Todo File (optional)",
           "description": "Path to your Bases todo.base file; used to auto-detect the todo tag",
           "placeholder": "/Users/ja/Obsidian/JA/tc/db/todo.base"
@@ -45,6 +46,7 @@
         {
           "name": "basesProjectFile",
           "type": "textfield",
+          "required": false,
           "title": "Bases Project File (optional)",
           "description": "Path to your Bases project.base file; used to auto-detect the project tag",
           "placeholder": "/Users/ja/Obsidian/JA/tc/db/project.base"
@@ -52,6 +54,7 @@
         {
           "name": "todoTag",
           "type": "textfield",
+          "required": false,
           "title": "Todo Tag (fallback)",
           "description": "Used if Bases file is not provided or has no tags.contains(...)",
           "default": "todo"
@@ -59,6 +62,7 @@
         {
           "name": "projectTag",
           "type": "textfield",
+          "required": false,
           "title": "Project Tag (fallback)",
           "description": "Used if Bases file is not provided or has no tags.contains(...)",
           "default": "project"
