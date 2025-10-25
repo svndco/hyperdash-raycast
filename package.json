@@ -1,0 +1,80 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "hyperdash-dev",
+  "title": "hyperDASH (hd) Dev",
+  "version": "0.3.0",
+  "private": true,
+  "description": "hyperDASH (hd): Obsidian Projects & Tasks (Bases-compatible, tag-only todos).",
+  "icon": "hd-icon.png",
+  "author": "your-name",
+  "categories": [
+    "Productivity",
+    "Note Taking"
+  ],
+  "permissions": [
+    "filesystem"
+  ],
+  "scripts": {
+    "build": "esbuild src/browse.tsx --bundle --platform=node --format=cjs --external:@raycast/api --outfile=dist/browse.js",
+    "dev": "ray develop || true"
+  },
+  "commands": [
+    {
+      "name": "browse-dev",
+      "title": "hyperDASH Dev: Projects & Tasks",
+      "subtitle": "Bases-compatible",
+      "description": "List Todos (tag-only) and Projects (Bases-compatible)",
+      "mode": "view",
+      "icon": "hd-icon.png",
+      "path": "dist/main.js",
+      "preferences": [
+        {
+          "name": "vaultPath",
+          "type": "textfield",
+          "title": "Vault Path",
+          "description": "Absolute path to your Obsidian vault folder",
+          "placeholder": "/Users/ja/Obsidian/JA"
+        },
+        {
+          "name": "basesTodoFile",
+          "type": "textfield",
+          "title": "Bases Todo File (optional)",
+          "description": "Path to your Bases todo.base file; used to auto-detect the todo tag",
+          "placeholder": "/Users/ja/Obsidian/JA/tc/db/todo.base"
+        },
+        {
+          "name": "basesProjectFile",
+          "type": "textfield",
+          "title": "Bases Project File (optional)",
+          "description": "Path to your Bases project.base file; used to auto-detect the project tag",
+          "placeholder": "/Users/ja/Obsidian/JA/tc/db/project.base"
+        },
+        {
+          "name": "todoTag",
+          "type": "textfield",
+          "title": "Todo Tag (fallback)",
+          "description": "Used if Bases file is not provided or has no tags.contains(...)",
+          "default": "todo"
+        },
+        {
+          "name": "projectTag",
+          "type": "textfield",
+          "title": "Project Tag (fallback)",
+          "description": "Used if Bases file is not provided or has no tags.contains(...)",
+          "default": "project"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.83.0",
+    "fast-glob": "^3.3.2",
+    "gray-matter": "^4.0.3",
+    "yaml": "^2.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.2",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0"
+  }
+}
