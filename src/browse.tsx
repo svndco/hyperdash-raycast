@@ -65,19 +65,19 @@ export default function Command() {
     <List isLoading={isLoading} searchBarPlaceholder="Search notes by title…">
       <List.Section title={`Todos (${todos.length})`} subtitle={`#${effectiveTodo}`}>
         {todos.map((n) => (
-          <NoteItem key={`todo-${n.path}`} note={n} badge="todo" />
+          <NoteItem key={`todo-${n.path}`} note={n} badge="todo" onRefresh={load} />
         ))}
       </List.Section>
       <List.Section title={`Projects (${projects.length})`} subtitle={`#${effectiveProject}`}>
         {projects.map((n) => (
-          <NoteItem key={`project-${n.path}`} note={n} badge="project" />
+          <NoteItem key={`project-${n.path}`} note={n} badge="project" onRefresh={load} />
         ))}
       </List.Section>
     </List>
   );
 }
 
-function NoteItem({ note, badge }: { note: Note; badge: "todo" | "project" }) {
+function NoteItem({ note, badge, onRefresh }: { note: Note; badge: "todo" | "project"; onRefresh: () => void }) {
   return (
     <List.Item
       title={note.title}
@@ -88,7 +88,7 @@ function NoteItem({ note, badge }: { note: Note; badge: "todo" | "project" }) {
           <Action.Open title="Open File" target={note.path} />
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
-          <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={() => {}} />
+          <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
         </ActionPanel>
       }
     />
