@@ -19,7 +19,7 @@
   },
   "commands": [
     {
-      "name": "browse-dev",
+      "name": "browse",
       "title": "hyperDASH Dev: Projects & Tasks",
       "subtitle": "Bases-compatible",
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
