@@ -184,8 +184,12 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       try {
         if (!prefs.vaultPath) return;
 
-        // Get project tags from preferences or defaults
-        const projectTagRaw = prefs.projectTag || "project";
+        // Get project tags from bases file or preferences
+        const projectFromBases = prefs.basesProjectFile?.trim()
+          ? await readBasesTag(prefs.basesProjectFile.trim())
+          : undefined;
+
+        const projectTagRaw = projectFromBases || prefs.projectTag || "project";
         const projectTags = projectTagRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
 
         const projectList = await scanProjects(prefs.vaultPath, projectTags);
@@ -223,8 +227,12 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
         return;
       }
 
-      // Use first project tag for new projects
-      const projectTagRaw = prefs.projectTag || "project";
+      // Get project tag from bases file or preferences
+      const projectFromBases = prefs.basesProjectFile?.trim()
+        ? await readBasesTag(prefs.basesProjectFile.trim())
+        : undefined;
+
+      const projectTagRaw = projectFromBases || prefs.projectTag || "project";
       const projectTags = projectTagRaw.split(',').map(t => t.trim()).filter(Boolean);
       const projectTag = projectTags[0] || "project";
 
@@ -382,7 +390,11 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
             icon={Icon.Folder}
             target={<SetProjectForm note={note} onProjectUpdated={onRefresh} />}
           />
-          <Action.Open title="Open in Obsidian" target={note.path} />
+          <Action.OpenInBrowser
+            title="Open in Obsidian"
+            url={`obsidian://open?path=${encodeURIComponent(note.path)}`}
+            icon={Icon.Document}
+          />
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
           <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
