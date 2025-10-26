@@ -146,3 +146,29 @@ export async function updateNoteDate(filePath: string, field: string, date: Date
   const updated = matter.stringify(parsed.content, parsed.data);
   await fs.writeFile(filePath, updated, "utf8");
 }
+
+export async function updateNoteProject(filePath: string, project: string): Promise<void> {
+  const raw = await fs.readFile(filePath, "utf8");
+  const parsed = matter(raw);
+
+  if (parsed.data) {
+    // If project is empty, remove the field
+    if (!project || project.trim() === "") {
+      delete parsed.data.project;
+      delete parsed.data.Project;
+    } else {
+      // Set project field (try both lowercase and capitalized)
+      parsed.data.project = project.trim();
+      // Also update Project if it exists
+      if (parsed.data.Project !== undefined) {
+        parsed.data.Project = project.trim();
+      }
+    }
+    // Update dateModified
+    parsed.data.dateModified = new Date().toISOString();
+  }
+
+  // Stringify back to markdown with frontmatter
+  const updated = matter.stringify(parsed.content, parsed.data);
+  await fs.writeFile(filePath, updated, "utf8");
+}

@@ -1,6 +1,6 @@
-import { Action, ActionPanel, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate } from "./utils";
+import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject } from "./utils";
 import { readBasesTag } from "./bases";
 
 type Prefs = {
@@ -172,6 +172,64 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
   );
 }
 
+function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdated: () => void }) {
+  const { pop } = useNavigation();
+  const [project, setProject] = useState<string>(note.project || "");
+
+  async function handleSubmit() {
+    try {
+      await updateNoteProject(note.path, project);
+      await showToast({
+        style: Toast.Style.Success,
+        title: project ? "Project Set" : "Project Cleared",
+        message: note.title
+      });
+      onProjectUpdated();
+      pop();
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+    }
+  }
+
+  async function handleClear() {
+    try {
+      await updateNoteProject(note.path, "");
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Project Cleared",
+        message: note.title
+      });
+      onProjectUpdated();
+      pop();
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+    }
+  }
+
+  return (
+    <Form
+      navigationTitle={`Set Project: ${note.title}`}
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm title="Set Project" icon={Icon.Checkmark} onSubmit={handleSubmit} />
+          {note.project && (
+            <Action title="Clear Project" icon={Icon.Trash} onAction={handleClear} />
+          )}
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="project"
+        title="Project"
+        placeholder="Enter project name"
+        value={project}
+        onChange={setProject}
+      />
+      <Form.Description text={`Current: ${note.project || "none"}`} />
+    </Form>
+  );
+}
+
 function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
   const accessories = [];
   if (note.project) {
@@ -225,6 +283,11 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
             title="Set Status"
             icon={Icon.Pencil}
             target={<SetStatusForm note={note} onStatusUpdated={onRefresh} />}
+          />
+          <Action.Push
+            title="Set Project"
+            icon={Icon.Folder}
+            target={<SetProjectForm note={note} onProjectUpdated={onRefresh} />}
           />
           <Action.Open title="Open in Obsidian" target={note.path} />
           <Action.ShowInFinder path={note.path} />
