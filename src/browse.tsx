@@ -56,23 +56,70 @@ export default function Command() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefs.vaultPath, prefs.basesTodoFile, prefs.basesProjectFile, prefs.todoTag, prefs.projectTag]);
+  }, []);
 
-  const todos = useMemo(() => notes.filter((n) => n.hasTodoTag).sort(sortByMtimeDesc), [notes]);
+  // Group todos by status
+  const todos = useMemo(() => notes.filter((n) => n.hasTodoTag), [notes]);
+  const inProgress = useMemo(() => todos.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [todos]);
+  const upNext = useMemo(() => todos.filter((n) => n.status === "next" || n.status === "up next").sort(sortByMtimeDesc), [todos]);
+  const todoItems = useMemo(() => todos.filter((n) => n.status === "todo" || n.status === "not started" || !n.status).sort(sortByMtimeDesc), [todos]);
+  const holdStuck = useMemo(() => todos.filter((n) => n.status === "hold/stuck" || n.status === "stuck" || n.status === "hold").sort(sortByMtimeDesc), [todos]);
+  const waiting = useMemo(() => todos.filter((n) => n.status === "waiting").sort(sortByMtimeDesc), [todos]);
+  const someday = useMemo(() => todos.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [todos]);
+
   const projects = useMemo(() => notes.filter((n) => n.hasProjectTag).sort(sortByMtimeDesc), [notes]);
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Search notes by title…">
-      <List.Section title={`Todos (${todos.length})`} subtitle={`#${effectiveTodo}`}>
-        {todos.map((n) => (
-          <NoteItem key={`todo-${n.path}`} note={n} badge="todo" onRefresh={load} />
-        ))}
-      </List.Section>
-      <List.Section title={`Projects (${projects.length})`} subtitle={`#${effectiveProject}`}>
-        {projects.map((n) => (
-          <NoteItem key={`project-${n.path}`} note={n} badge="project" onRefresh={load} />
-        ))}
-      </List.Section>
+      {inProgress.length > 0 && (
+        <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
+          {inProgress.map((n) => (
+            <NoteItem key={`inprogress-${n.path}`} note={n} badge="todo" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {upNext.length > 0 && (
+        <List.Section title={`Up Next (${upNext.length})`} subtitle="status: next">
+          {upNext.map((n) => (
+            <NoteItem key={`upnext-${n.path}`} note={n} badge="todo" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {todoItems.length > 0 && (
+        <List.Section title={`Todo (${todoItems.length})`} subtitle="status: todo">
+          {todoItems.map((n) => (
+            <NoteItem key={`todo-${n.path}`} note={n} badge="todo" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {holdStuck.length > 0 && (
+        <List.Section title={`Hold/Stuck (${holdStuck.length})`} subtitle="status: hold/stuck">
+          {holdStuck.map((n) => (
+            <NoteItem key={`hold-${n.path}`} note={n} badge="todo" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {waiting.length > 0 && (
+        <List.Section title={`Waiting (${waiting.length})`} subtitle="status: waiting">
+          {waiting.map((n) => (
+            <NoteItem key={`waiting-${n.path}`} note={n} badge="todo" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {someday.length > 0 && (
+        <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
+          {someday.map((n) => (
+            <NoteItem key={`someday-${n.path}`} note={n} badge="todo" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {projects.length > 0 && (
+        <List.Section title={`Projects (${projects.length})`} subtitle={`#${effectiveProject}`}>
+          {projects.map((n) => (
+            <NoteItem key={`project-${n.path}`} note={n} badge="project" onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
     </List>
   );
 }

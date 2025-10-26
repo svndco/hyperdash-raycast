@@ -25,7 +25,7 @@
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
       "mode": "view",
       "icon": "hd-icon.png",
-      "path": "dist/browse.js",
+      "path": "src/browse.tsx",
       "preferences": [
         {
           "name": "vaultPath",
@@ -39,9 +39,9 @@
           "name": "basesTodoFile",
           "type": "textfield",
           "required": false,
-          "title": "Bases Todo File (optional)",
-          "description": "Path to your Bases todo.base file; used to auto-detect the todo tag",
-          "placeholder": "/Users/ja/Obsidian/JA/tc/db/todo.base"
+          "title": "Bases HyperDASH File (optional)",
+          "description": "Path to your Bases hyperdash.base file; used to auto-detect the todo tag and views",
+          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperdash.base"
         },
         {
           "name": "basesProjectFile",

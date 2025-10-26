@@ -14,6 +14,7 @@ export type Note = {
   mtimeMs: number;
   hasTodoTag: boolean;
   hasProjectTag: boolean;
+  status?: string;
 };
 
 function normalizeTags(value: unknown): string[] {
@@ -48,9 +49,12 @@ export async function scanVault(opts: { vaultPath: string; todoTag: string; proj
     followSymbolicLinks: false
   });
 
+  // Limit to first 1000 files to prevent memory issues
+  const limitedEntries = entries.slice(0, 1000);
+
   const notes: Note[] = [];
   await Promise.all(
-    entries.map(async (rel) => {
+    limitedEntries.map(async (rel) => {
       const abs = path.join(vaultPath, rel);
       try {
         const [raw, st] = await Promise.all([fs.readFile(abs, "utf8"), fs.stat(abs)]);
@@ -60,6 +64,16 @@ export async function scanVault(opts: { vaultPath: string; todoTag: string; proj
         const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
         const title = extractTitle(parsed.content, (parsed.data as any)?.title, path.parse(rel).name);
 
+        // Extract status from frontmatter (try both lowercase and capitalized)
+        const rawStatus = (parsed.data as any)?.status || (parsed.data as any)?.Status;
+        const status = typeof rawStatus === "string" ? rawStatus.trim().toLowerCase() : undefined;
+
+        // Filter out done and canceled todos
+        const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
+        if (isDoneOrCanceled) {
+          return; // Skip this note
+        }
+
         notes.push({
           title,
           path: abs,
@@ -67,7 +81,8 @@ export async function scanVault(opts: { vaultPath: string; todoTag: string; proj
           tags,
           mtimeMs: st.mtimeMs,
           hasTodoTag: tags.includes(todoTag.toLowerCase()),
-          hasProjectTag: tags.includes(projectTag.toLowerCase())
+          hasProjectTag: tags.includes(projectTag.toLowerCase()),
+          status
         });
       } catch {
         // ignore unreadable file
