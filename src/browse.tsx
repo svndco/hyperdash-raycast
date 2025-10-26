@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject } from "./utils";
+import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, scanProjects, createProjectNote } from "./utils";
 import { readBasesTag } from "./bases";
 
 type Prefs = {
@@ -174,20 +174,75 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
 
 function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdated: () => void }) {
   const { pop } = useNavigation();
-  const [project, setProject] = useState<string>(note.project || "");
+  const prefs = getPreferenceValues<Prefs>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState<string[]>([]);
+  const [newProjectName, setNewProjectName] = useState<string>("");
 
-  async function handleSubmit() {
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        if (!prefs.vaultPath) return;
+
+        // Get project tags from preferences or defaults
+        const projectTagRaw = prefs.projectTag || "project";
+        const projectTags = projectTagRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+
+        const projectList = await scanProjects(prefs.vaultPath, projectTags);
+        setProjects(projectList);
+      } catch (error: any) {
+        await showToast({ style: Toast.Style.Failure, title: "Failed to load projects", message: error.message });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadProjects();
+  }, []);
+
+  async function handleSelectProject(projectName: string) {
     try {
-      await updateNoteProject(note.path, project);
+      await updateNoteProject(note.path, projectName);
       await showToast({
         style: Toast.Style.Success,
-        title: project ? "Project Set" : "Project Cleared",
+        title: "Project Set",
         message: note.title
       });
       onProjectUpdated();
       pop();
     } catch (error: any) {
       await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+    }
+  }
+
+  async function handleCreateAndSet() {
+    if (!newProjectName.trim()) return;
+
+    try {
+      if (!prefs.vaultPath) {
+        await showToast({ style: Toast.Style.Failure, title: "Vault path not set" });
+        return;
+      }
+
+      // Use first project tag for new projects
+      const projectTagRaw = prefs.projectTag || "project";
+      const projectTags = projectTagRaw.split(',').map(t => t.trim()).filter(Boolean);
+      const projectTag = projectTags[0] || "project";
+
+      // Create new project note
+      await createProjectNote(prefs.vaultPath, newProjectName.trim(), projectTag);
+
+      // Set it on the todo
+      await updateNoteProject(note.path, newProjectName.trim());
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Project Created & Set",
+        message: note.title
+      });
+      onProjectUpdated();
+      pop();
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to create project", message: error.message });
     }
   }
 
@@ -202,31 +257,69 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       onProjectUpdated();
       pop();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+      await showToast({ style: Toast.Style.Failure, title: "Failed to clear", message: error.message });
     }
   }
 
   return (
-    <Form
+    <List
+      isLoading={isLoading}
       navigationTitle={`Set Project: ${note.title}`}
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm title="Set Project" icon={Icon.Checkmark} onSubmit={handleSubmit} />
-          {note.project && (
-            <Action title="Clear Project" icon={Icon.Trash} onAction={handleClear} />
-          )}
-        </ActionPanel>
-      }
+      searchBarPlaceholder="Search projects or type new name..."
+      onSearchTextChange={(text) => setNewProjectName(text)}
     >
-      <Form.TextField
-        id="project"
-        title="Project"
-        placeholder="Enter project name"
-        value={project}
-        onChange={setProject}
-      />
-      <Form.Description text={`Current: ${note.project || "none"}`} />
-    </Form>
+      <List.Section title={`Current: ${note.project || "none"}`}>
+        {note.project && (
+          <List.Item
+            title="Clear Project"
+            icon={Icon.Trash}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Clear Project"
+                  icon={Icon.Trash}
+                  onAction={handleClear}
+                />
+              </ActionPanel>
+            }
+          />
+        )}
+        {newProjectName.trim() && !projects.includes(newProjectName.trim()) && (
+          <List.Item
+            title={`Create New: "${newProjectName.trim()}"`}
+            icon={Icon.Plus}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Create & Set Project"
+                  icon={Icon.Plus}
+                  onAction={handleCreateAndSet}
+                />
+              </ActionPanel>
+            }
+          />
+        )}
+      </List.Section>
+      <List.Section title="Existing Projects">
+        {projects.map((proj) => (
+          <List.Item
+            key={proj}
+            title={proj}
+            icon={Icon.Folder}
+            accessories={proj === note.project ? [{ text: "Current" }] : []}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Set Project"
+                  icon={Icon.Checkmark}
+                  onAction={() => handleSelectProject(proj)}
+                />
+              </ActionPanel>
+            }
+          />
+        ))}
+      </List.Section>
+    </List>
   );
 }
 

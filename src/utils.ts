@@ -172,3 +172,67 @@ export async function updateNoteProject(filePath: string, project: string): Prom
   const updated = matter.stringify(parsed.content, parsed.data);
   await fs.writeFile(filePath, updated, "utf8");
 }
+
+export async function scanProjects(vaultPath: string, projectTags: string[]): Promise<string[]> {
+  const entries = await fg(["**/*.md", "**/*.markdown"], {
+    cwd: vaultPath,
+    ignore: ["**/.obsidian/**", "**/.git/**", "**/node_modules/**", "**/log/**", "**/archive/**"],
+    onlyFiles: true,
+    unique: true,
+    followSymbolicLinks: false
+  });
+
+  const projects: Set<string> = new Set();
+
+  await Promise.all(
+    entries.slice(0, 5000).map(async (rel) => {
+      const abs = path.join(vaultPath, rel);
+      try {
+        const raw = await fs.readFile(abs, "utf8");
+        const parsed = matter(raw);
+        const fmTags = normalizeTags((parsed.data as any)?.tags);
+        const inlineTags = extractInlineTags(parsed.content);
+        const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+
+        // Check if note has any of the specified project tags
+        const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
+        if (hasProjectTag) {
+          // Extract title from filename (remove .md extension)
+          const title = path.parse(rel).name;
+          projects.add(title);
+        }
+      } catch {
+        // ignore unreadable file
+      }
+    })
+  );
+
+  return Array.from(projects).sort();
+}
+
+export async function createProjectNote(vaultPath: string, projectName: string, projectTag: string): Promise<void> {
+  const fileName = `${projectName}.md`;
+  const filePath = path.join(vaultPath, fileName);
+
+  // Check if file already exists
+  try {
+    await fs.access(filePath);
+    // File exists, don't create
+    return;
+  } catch {
+    // File doesn't exist, create it
+    const content = `---
+tags:
+  - ${projectTag}
+status: planning
+dateCreated: ${new Date().toISOString()}
+dateModified: ${new Date().toISOString()}
+---
+
+# ${projectName}
+
+`;
+
+    await fs.writeFile(filePath, content, "utf8");
+  }
+}
