@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus } from "./utils";
+import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate } from "./utils";
 import { readBasesTag } from "./bases";
 
 type Prefs = {
@@ -199,6 +199,21 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
     itemIcon = Icon.XMarkCircle;
   }
 
+  async function handleDateChange(field: string, fieldLabel: string, date: Date | null) {
+    try {
+      await updateNoteDate(note.path, field, date);
+      const message = date ? `Set to: ${date.toLocaleDateString()}` : "Cleared";
+      await showToast({
+        style: Toast.Style.Success,
+        title: `${fieldLabel} Updated`,
+        message: note.title
+      });
+      onRefresh();
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+    }
+  }
+
   return (
     <List.Item
       title={note.title}
@@ -215,6 +230,24 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
           <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
+
+          <ActionPanel.Section title="Set Dates">
+            <Action.PickDate
+              title="Set Due Date"
+              icon={Icon.Calendar}
+              onChange={(date) => handleDateChange("date_due", "Due Date", date)}
+            />
+            <Action.PickDate
+              title="Set Start Date"
+              icon={Icon.PlayFilled}
+              onChange={(date) => handleDateChange("date_started", "Start Date", date)}
+            />
+            <Action.PickDate
+              title="Set Scheduled Date"
+              icon={Icon.Clock}
+              onChange={(date) => handleDateChange("scheduled", "Scheduled Date", date)}
+            />
+          </ActionPanel.Section>
         </ActionPanel>
       }
     />

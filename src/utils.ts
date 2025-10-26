@@ -124,3 +124,25 @@ export async function updateNoteStatus(filePath: string, newStatus: string): Pro
   const updated = matter.stringify(parsed.content, parsed.data);
   await fs.writeFile(filePath, updated, "utf8");
 }
+
+export async function updateNoteDate(filePath: string, field: string, date: Date | null): Promise<void> {
+  const raw = await fs.readFile(filePath, "utf8");
+  const parsed = matter(raw);
+
+  if (parsed.data) {
+    // If date is null, remove the field
+    if (date === null) {
+      delete parsed.data[field];
+    } else {
+      // Format date as YYYY-MM-DD
+      const dateStr = date.toISOString().split('T')[0];
+      parsed.data[field] = dateStr;
+    }
+    // Update dateModified
+    parsed.data.dateModified = new Date().toISOString();
+  }
+
+  // Stringify back to markdown with frontmatter
+  const updated = matter.stringify(parsed.content, parsed.data);
+  await fs.writeFile(filePath, updated, "utf8");
+}
