@@ -31,9 +31,17 @@
           "name": "vaultPath",
           "type": "textfield",
           "required": true,
-          "title": "Vault Path",
-          "description": "Absolute path to your Obsidian vault folder",
-          "placeholder": "/Users/ja/Obsidian/JA"
+          "title": "Vault Path (Todos)",
+          "description": "Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance)",
+          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/tc/todo"
+        },
+        {
+          "name": "projectPath",
+          "type": "textfield",
+          "required": false,
+          "title": "Project Path (optional)",
+          "description": "Path to scan for projects. If not set, uses Vault Path. Set to full vault for all projects.",
+          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
         },
         {
           "name": "basesTodoFile",

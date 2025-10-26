@@ -5,6 +5,7 @@ import { readBasesTag } from "./bases";
 
 type Prefs = {
   vaultPath?: string;
+  projectPath?: string;
   basesTodoFile?: string;
   basesProjectFile?: string;
   todoTag?: string;
@@ -182,7 +183,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   useEffect(() => {
     async function loadProjects() {
       try {
-        if (!prefs.vaultPath) return;
+        // Use projectPath if set, otherwise fall back to vaultPath
+        const scanPath = prefs.projectPath?.trim() || prefs.vaultPath;
+        if (!scanPath) return;
 
         // Get project tags from bases file or preferences
         const projectFromBases = prefs.basesProjectFile?.trim()
@@ -192,7 +195,7 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
         const projectTagRaw = projectFromBases || prefs.projectTag || "project";
         const projectTags = projectTagRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
 
-        const projectList = await scanProjects(prefs.vaultPath, projectTags);
+        const projectList = await scanProjects(scanPath, projectTags);
         setProjects(projectList);
       } catch (error: any) {
         await showToast({ style: Toast.Style.Failure, title: "Failed to load projects", message: error.message });
@@ -222,7 +225,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
     if (!newProjectName.trim()) return;
 
     try {
-      if (!prefs.vaultPath) {
+      // Use projectPath if set, otherwise fall back to vaultPath
+      const createPath = prefs.projectPath?.trim() || prefs.vaultPath;
+      if (!createPath) {
         await showToast({ style: Toast.Style.Failure, title: "Vault path not set" });
         return;
       }
@@ -237,7 +242,7 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       const projectTag = projectTags[0] || "project";
 
       // Create new project note
-      await createProjectNote(prefs.vaultPath, newProjectName.trim(), projectTag);
+      await createProjectNote(createPath, newProjectName.trim(), projectTag);
 
       // Set it on the todo
       await updateNoteProject(note.path, newProjectName.trim());
