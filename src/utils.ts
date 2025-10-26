@@ -15,6 +15,7 @@ export type Note = {
   hasTodoTag: boolean;
   hasProjectTag: boolean;
   status?: string;
+  project?: string;
 };
 
 function normalizeTags(value: unknown): string[] {
@@ -39,18 +40,18 @@ function extractTitle(content: string, fmTitle: unknown, fallback: string) {
   return h1 ? h1.trim() : fallback;
 }
 
-export async function scanVault(opts: { vaultPath: string; todoTag: string; projectTag: string }): Promise<Note[]> {
-  const { vaultPath, todoTag, projectTag } = opts;
+export async function scanVault(opts: { vaultPath: string; todoTags: string[]; projectTags: string[] }): Promise<Note[]> {
+  const { vaultPath, todoTags, projectTags } = opts;
   const entries = await fg(["**/*.md", "**/*.markdown"], {
     cwd: vaultPath,
-    ignore: ["**/.obsidian/**", "**/.git/**", "**/node_modules/**"],
+    ignore: ["**/.obsidian/**", "**/.git/**", "**/node_modules/**", "**/log/**", "**/archive/**"],
     onlyFiles: true,
     unique: true,
     followSymbolicLinks: false
   });
 
-  // Limit to first 1000 files to prevent memory issues
-  const limitedEntries = entries.slice(0, 1000);
+  // Limit to first 5000 files to prevent memory issues
+  const limitedEntries = entries.slice(0, 5000);
 
   const notes: Note[] = [];
   await Promise.all(
@@ -64,9 +65,12 @@ export async function scanVault(opts: { vaultPath: string; todoTag: string; proj
         const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
         const title = extractTitle(parsed.content, (parsed.data as any)?.title, path.parse(rel).name);
 
-        // Extract status from frontmatter (try both lowercase and capitalized)
+        // Extract status and project from frontmatter
         const rawStatus = (parsed.data as any)?.status || (parsed.data as any)?.Status;
         const status = typeof rawStatus === "string" ? rawStatus.trim().toLowerCase() : undefined;
+
+        const rawProject = (parsed.data as any)?.project || (parsed.data as any)?.Project;
+        const project = typeof rawProject === "string" ? rawProject.trim() : undefined;
 
         // Filter out done and canceled todos
         const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
@@ -74,15 +78,20 @@ export async function scanVault(opts: { vaultPath: string; todoTag: string; proj
           return; // Skip this note
         }
 
+        // Check if note has any of the specified todo or project tags
+        const hasTodoTag = todoTags.some(todoTag => tags.includes(todoTag));
+        const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
+
         notes.push({
           title,
           path: abs,
           relativePath: rel,
           tags,
           mtimeMs: st.mtimeMs,
-          hasTodoTag: tags.includes(todoTag.toLowerCase()),
-          hasProjectTag: tags.includes(projectTag.toLowerCase()),
-          status
+          hasTodoTag,
+          hasProjectTag,
+          status,
+          project
         });
       } catch {
         // ignore unreadable file
@@ -94,4 +103,24 @@ export async function scanVault(opts: { vaultPath: string; todoTag: string; proj
 
 export function sortByMtimeDesc(a: Note, b: Note) {
   return b.mtimeMs - a.mtimeMs;
+}
+
+export async function updateNoteStatus(filePath: string, newStatus: string): Promise<void> {
+  const raw = await fs.readFile(filePath, "utf8");
+  const parsed = matter(raw);
+
+  // Update status in frontmatter (try both lowercase and capitalized)
+  if (parsed.data) {
+    parsed.data.status = newStatus;
+    // Also update Status if it exists
+    if (parsed.data.Status !== undefined) {
+      parsed.data.Status = newStatus;
+    }
+    // Update dateModified
+    parsed.data.dateModified = new Date().toISOString();
+  }
+
+  // Stringify back to markdown with frontmatter
+  const updated = matter.stringify(parsed.content, parsed.data);
+  await fs.writeFile(filePath, updated, "utf8");
 }
