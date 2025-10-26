@@ -70,7 +70,7 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
         const status = typeof rawStatus === "string" ? rawStatus.trim().toLowerCase() : undefined;
 
         const rawProject = (parsed.data as any)?.project || (parsed.data as any)?.Project;
-        const project = typeof rawProject === "string" ? rawProject.trim() : undefined;
+        const project = typeof rawProject === "string" ? rawProject.trim().replace(/^\[\[|\]\]$/g, "") : undefined;
 
         // Filter out done and canceled todos
         const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
