@@ -13,8 +13,42 @@
   "permissions": [
     "filesystem"
   ],
+  "preferences": [
+    {
+      "name": "vaultPath",
+      "type": "textfield",
+      "required": true,
+      "title": "Vault Path (Todos)",
+      "description": "Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance)",
+      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/tc/todo"
+    },
+    {
+      "name": "projectPath",
+      "type": "textfield",
+      "required": true,
+      "title": "Project Path",
+      "description": "Path to scan for projects. Set to full vault root for all projects.",
+      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
+    },
+    {
+      "name": "basesTodoFile",
+      "type": "textfield",
+      "required": true,
+      "title": "Bases HyperDASH File",
+      "description": "Path to your Bases hyperdash.base file containing todo tag definitions",
+      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperdash.base"
+    },
+    {
+      "name": "basesProjectFile",
+      "type": "textfield",
+      "required": true,
+      "title": "Bases Project File",
+      "description": "Path to your Bases project.base file containing project tag definitions",
+      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
+    }
+  ],
   "scripts": {
-    "build": "esbuild src/browse.tsx --bundle --platform=node --format=cjs --external:@raycast/api --outfile=dist/browse.js",
+    "build": "esbuild src/browse.tsx --bundle --platform=node --format=cjs --external:@raycast/api --outfile=dist/browse.js && esbuild src/projects.tsx --bundle --platform=node --format=cjs --external:@raycast/api --outfile=dist/projects.js",
     "dev": "ray develop || true"
   },
   "commands": [
@@ -25,41 +59,7 @@
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
       "mode": "view",
       "icon": "hd-icon.png",
-      "path": "src/browse.tsx",
-      "preferences": [
-        {
-          "name": "vaultPath",
-          "type": "textfield",
-          "required": true,
-          "title": "Vault Path (Todos)",
-          "description": "Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance)",
-          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/tc/todo"
-        },
-        {
-          "name": "projectPath",
-          "type": "textfield",
-          "required": true,
-          "title": "Project Path",
-          "description": "Path to scan for projects. Set to full vault root for all projects.",
-          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
-        },
-        {
-          "name": "basesTodoFile",
-          "type": "textfield",
-          "required": true,
-          "title": "Bases HyperDASH File",
-          "description": "Path to your Bases hyperdash.base file containing todo tag definitions",
-          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperdash.base"
-        },
-        {
-          "name": "basesProjectFile",
-          "type": "textfield",
-          "required": true,
-          "title": "Bases Project File",
-          "description": "Path to your Bases project.base file containing project tag definitions",
-          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
-        }
-      ]
+      "path": "src/browse.tsx"
     },
     {
       "name": "projects",
@@ -68,25 +68,7 @@
       "description": "List Projects (Bases-compatible)",
       "mode": "view",
       "icon": "hd-icon.png",
-      "path": "src/projects.tsx",
-      "preferences": [
-        {
-          "name": "projectPath",
-          "type": "textfield",
-          "required": true,
-          "title": "Project Path",
-          "description": "Path to scan for projects. Set to full vault root for all projects.",
-          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
-        },
-        {
-          "name": "basesProjectFile",
-          "type": "textfield",
-          "required": true,
-          "title": "Bases Project File",
-          "description": "Path to your Bases project.base file containing project tag definitions",
-          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
-        }
-      ]
+      "path": "src/projects.tsx"
     }
   ],
   "dependencies": {
