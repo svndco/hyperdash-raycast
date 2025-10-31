@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "hyperdash-dev",
-  "title": "hyperDASH (hd) Dev",
+  "title": "hyperDASH: Projects & Task Notes",
   "version": "0.3.0",
   "description": "hyperDASH (hd): Obsidian Projects & Tasks (Bases-compatible, tag-only todos).",
   "icon": "hd-icon.png",
@@ -20,8 +20,8 @@
   "commands": [
     {
       "name": "browse",
-      "title": "hyperDASH Dev: Projects & Tasks",
-      "subtitle": "Bases-compatible",
+      "title": "Task Notes",
+      "subtitle": "hyperDASH",
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
       "mode": "view",
       "icon": "hd-icon.png",
@@ -38,42 +38,53 @@
         {
           "name": "projectPath",
           "type": "textfield",
-          "required": false,
-          "title": "Project Path (optional)",
-          "description": "Path to scan for projects. If not set, uses Vault Path. Set to full vault for all projects.",
+          "required": true,
+          "title": "Project Path",
+          "description": "Path to scan for projects. Set to full vault root for all projects.",
           "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
         },
         {
           "name": "basesTodoFile",
           "type": "textfield",
-          "required": false,
-          "title": "Bases HyperDASH File (optional)",
-          "description": "Path to your Bases hyperdash.base file; used to auto-detect the todo tag and views",
+          "required": true,
+          "title": "Bases HyperDASH File",
+          "description": "Path to your Bases hyperdash.base file containing todo tag definitions",
           "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperdash.base"
         },
         {
           "name": "basesProjectFile",
           "type": "textfield",
-          "required": false,
-          "title": "Bases Project File (optional)",
-          "description": "Path to your Bases project.base file; used to auto-detect the project tag",
-          "placeholder": "/Users/ja/Obsidian/JA/tc/db/project.base"
+          "required": true,
+          "title": "Bases Project File",
+          "description": "Path to your Bases project.base file containing project tag definitions",
+          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
+        }
+      ]
+    },
+    {
+      "name": "projects",
+      "title": "Project Notes",
+      "subtitle": "hyperDASH",
+      "description": "List Projects (Bases-compatible)",
+      "mode": "view",
+      "icon": "hd-icon.png",
+      "path": "src/projects.tsx",
+      "preferences": [
+        {
+          "name": "projectPath",
+          "type": "textfield",
+          "required": true,
+          "title": "Project Path",
+          "description": "Path to scan for projects. Set to full vault root for all projects.",
+          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
         },
         {
-          "name": "todoTag",
+          "name": "basesProjectFile",
           "type": "textfield",
-          "required": false,
-          "title": "Todo Tag (fallback)",
-          "description": "Used if Bases file is not provided or has no tags.contains(...)",
-          "default": "todo"
-        },
-        {
-          "name": "projectTag",
-          "type": "textfield",
-          "required": false,
-          "title": "Project Tag (fallback)",
-          "description": "Used if Bases file is not provided or has no tags.contains(...)",
-          "default": "project"
+          "required": true,
+          "title": "Bases Project File",
+          "description": "Path to your Bases project.base file containing project tag definitions",
+          "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
         }
       ]
     }

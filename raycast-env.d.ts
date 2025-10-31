@@ -15,21 +15,28 @@ declare type Preferences = ExtensionPreferences
 declare namespace Preferences {
   /** Preferences accessible in the `browse` command */
   export type Browse = ExtensionPreferences & {
-  /** Vault Path - Absolute path to your Obsidian vault folder */
+  /** Vault Path (Todos) - Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance) */
   "vaultPath": string,
-  /** Bases HyperDASH File (optional) - Path to your Bases hyperdash.base file; used to auto-detect the todo tag and views */
-  "basesTodoFile"?: string,
-  /** Bases Project File (optional) - Path to your Bases project.base file; used to auto-detect the project tag */
-  "basesProjectFile"?: string,
-  /** Todo Tag (fallback) - Used if Bases file is not provided or has no tags.contains(...) */
-  "todoTag": string,
-  /** Project Tag (fallback) - Used if Bases file is not provided or has no tags.contains(...) */
-  "projectTag": string
+  /** Project Path - Path to scan for projects. Set to full vault root for all projects. */
+  "projectPath": string,
+  /** Bases HyperDASH File - Path to your Bases hyperdash.base file containing todo tag definitions */
+  "basesTodoFile": string,
+  /** Bases Project File - Path to your Bases project.base file containing project tag definitions */
+  "basesProjectFile": string
+}
+  /** Preferences accessible in the `projects` command */
+  export type Projects = ExtensionPreferences & {
+  /** Project Path - Path to scan for projects. Set to full vault root for all projects. */
+  "projectPath": string,
+  /** Bases Project File - Path to your Bases project.base file containing project tag definitions */
+  "basesProjectFile": string
 }
 }
 
 declare namespace Arguments {
   /** Arguments passed to the `browse` command */
   export type Browse = {}
+  /** Arguments passed to the `projects` command */
+  export type Projects = {}
 }
 

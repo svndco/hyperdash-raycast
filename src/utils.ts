@@ -16,6 +16,9 @@ export type Note = {
   hasProjectTag: boolean;
   status?: string;
   project?: string;
+  dateDue?: string;
+  dateStarted?: string;
+  dateScheduled?: string;
 };
 
 function normalizeTags(value: unknown): string[] {
@@ -72,6 +75,16 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
         const rawProject = (parsed.data as any)?.project || (parsed.data as any)?.Project;
         const project = typeof rawProject === "string" ? rawProject.trim().replace(/^\[\[|\]\]$/g, "") : undefined;
 
+        // Extract date fields from frontmatter (support various naming conventions)
+        const rawDateDue = (parsed.data as any)?.date_due || (parsed.data as any)?.dateDue || (parsed.data as any)?.due_date || (parsed.data as any)?.due;
+        const dateDue = typeof rawDateDue === "string" ? rawDateDue.trim() : undefined;
+
+        const rawDateStarted = (parsed.data as any)?.date_started || (parsed.data as any)?.dateStarted || (parsed.data as any)?.start_date || (parsed.data as any)?.started;
+        const dateStarted = typeof rawDateStarted === "string" ? rawDateStarted.trim() : undefined;
+
+        const rawDateScheduled = (parsed.data as any)?.date_scheduled || (parsed.data as any)?.dateScheduled || (parsed.data as any)?.scheduled;
+        const dateScheduled = typeof rawDateScheduled === "string" ? rawDateScheduled.trim() : undefined;
+
         // Filter out done and canceled todos
         const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
         if (isDoneOrCanceled) {
@@ -91,7 +104,10 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
           hasTodoTag,
           hasProjectTag,
           status,
-          project
+          project,
+          dateDue,
+          dateStarted,
+          dateScheduled
         });
       } catch {
         // ignore unreadable file
@@ -210,7 +226,13 @@ export async function scanProjects(vaultPath: string, projectTags: string[]): Pr
   return Array.from(projects).sort();
 }
 
-export async function createProjectNote(vaultPath: string, projectName: string, projectTag: string): Promise<void> {
+export async function createProjectNote(
+  vaultPath: string,
+  projectName: string,
+  projectTag: string,
+  dateStarted?: Date,
+  dateDue?: Date
+): Promise<void> {
   const fileName = `${projectName}.md`;
   const filePath = path.join(vaultPath, fileName);
 
@@ -221,18 +243,72 @@ export async function createProjectNote(vaultPath: string, projectName: string, 
     return;
   } catch {
     // File doesn't exist, create it
-    const content = `---
+    const now = new Date().toISOString();
+
+    // Build frontmatter with optional dates
+    let frontmatter = `---
 tags:
   - ${projectTag}
 status: planning
-dateCreated: ${new Date().toISOString()}
-dateModified: ${new Date().toISOString()}
----
+dateCreated: ${now}
+dateModified: ${now}`;
 
-# ${projectName}
+    if (dateStarted) {
+      const dateStr = dateStarted.toISOString().split('T')[0];
+      frontmatter += `\ndate_started: ${dateStr}`;
+    }
 
-`;
+    if (dateDue) {
+      const dateStr = dateDue.toISOString().split('T')[0];
+      frontmatter += `\ndate_due: ${dateStr}`;
+    }
 
-    await fs.writeFile(filePath, content, "utf8");
+    frontmatter += `\n---\n\n# ${projectName}\n\n`;
+
+    await fs.writeFile(filePath, frontmatter, "utf8");
+  }
+}
+
+export async function createTodoNote(
+  vaultPath: string,
+  todoTitle: string,
+  todoTag: string,
+  dateStarted?: Date,
+  dateDue?: Date
+): Promise<string> {
+  const fileName = `${todoTitle}.md`;
+  const filePath = path.join(vaultPath, fileName);
+
+  // Check if file already exists
+  try {
+    await fs.access(filePath);
+    // File exists, return the path
+    return filePath;
+  } catch {
+    // File doesn't exist, create it
+    const now = new Date().toISOString();
+
+    // Build frontmatter with optional dates
+    let frontmatter = `---
+tags:
+  - ${todoTag}
+status: todo
+dateCreated: ${now}
+dateModified: ${now}`;
+
+    if (dateStarted) {
+      const dateStr = dateStarted.toISOString().split('T')[0];
+      frontmatter += `\ndate_started: ${dateStr}`;
+    }
+
+    if (dateDue) {
+      const dateStr = dateDue.toISOString().split('T')[0];
+      frontmatter += `\ndate_due: ${dateStr}`;
+    }
+
+    frontmatter += `\n---\n\n# ${todoTitle}\n\n`;
+
+    await fs.writeFile(filePath, frontmatter, "utf8");
+    return filePath;
   }
 }

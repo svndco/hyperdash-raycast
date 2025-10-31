@@ -1,48 +1,135 @@
-import { Action, ActionPanel, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Color, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, scanProjects, createProjectNote } from "./utils";
+import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, scanProjects, createProjectNote, createTodoNote } from "./utils";
 import { readBasesTag } from "./bases";
 
 type Prefs = {
-  vaultPath?: string;
-  projectPath?: string;
-  basesTodoFile?: string;
-  basesProjectFile?: string;
-  todoTag?: string;
-  projectTag?: string;
+  vaultPath: string;
+  projectPath: string;
+  basesTodoFile: string;
+  basesProjectFile: string;
 };
+
+function formatDate(dateStr: string): string {
+  try {
+    // Parse as local date to avoid timezone issues
+    // Split "2025-10-26" into [2025, 10, 26]
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // months are 0-indexed
+      const day = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+      return `${monthStr} ${day}`;
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
+
+function isOverdue(dateStr: string): boolean {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const dueDate = new Date(year, month, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to midnight for fair comparison
+      return dueDate < today;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function isToday(dateStr: string): boolean {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const dueDate = new Date(year, month, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      dueDate.setHours(0, 0, 0, 0);
+      return dueDate.getTime() === today.getTime();
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 export default function Command() {
   const prefs = getPreferenceValues<Prefs>();
   const [isLoading, setIsLoading] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [effectiveTodo, setEffectiveTodo] = useState<string>(prefs.todoTag?.trim().toLowerCase() || "todo");
-  const [effectiveProject, setEffectiveProject] = useState<string>(prefs.projectTag?.trim().toLowerCase() || "project");
+  const [searchText, setSearchText] = useState<string>("");
+  const [effectiveTodo, setEffectiveTodo] = useState<string>("");
+  const [effectiveProject, setEffectiveProject] = useState<string>("");
 
   async function load() {
     try {
       setIsLoading(true);
 
-      const [todoFromBases, projectFromBases] = await Promise.all([
-        prefs.basesTodoFile?.trim() ? readBasesTag(prefs.basesTodoFile.trim()) : Promise.resolve(undefined),
-        prefs.basesProjectFile?.trim() ? readBasesTag(prefs.basesProjectFile.trim()) : Promise.resolve(undefined)
-      ]);
-
-      // Support comma-separated tags
-      const todoTagRaw = todoFromBases || prefs.todoTag || "todo";
-      const projectTagRaw = projectFromBases || prefs.projectTag || "project";
-
-      const todoTags = todoTagRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-      const projectTags = projectTagRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-
-      setEffectiveTodo(todoTags.join(', '));
-      setEffectiveProject(projectTags.join(', '));
-
+      // Validate required fields
       if (!prefs.vaultPath?.trim()) {
         await showToast({ style: Toast.Style.Failure, title: "Set Vault Path in Preferences" });
         setNotes([]);
         return;
       }
+
+      if (!prefs.basesTodoFile?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Set Bases HyperDASH File in Preferences" });
+        setNotes([]);
+        return;
+      }
+
+      if (!prefs.basesProjectFile?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Set Bases Project File in Preferences" });
+        setNotes([]);
+        return;
+      }
+
+      // Read tags from Bases files
+      const [todoFromBases, projectFromBases] = await Promise.all([
+        readBasesTag(prefs.basesTodoFile.trim()),
+        readBasesTag(prefs.basesProjectFile.trim())
+      ]);
+
+      // Validate that Bases files contain tags
+      if (!todoFromBases) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in HyperDASH file",
+          message: "Check that your hyperdash.base file contains tags.containsAny() or tags.contains()"
+        });
+        setNotes([]);
+        return;
+      }
+
+      if (!projectFromBases) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in Project file",
+          message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+        });
+        setNotes([]);
+        return;
+      }
+
+      // Support comma-separated tags
+      const todoTags = todoFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+      const projectTags = projectFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+
+      setEffectiveTodo(todoTags.join(', '));
+      setEffectiveProject(projectTags.join(', '));
 
       const scanned = await scanVault({
         vaultPath: prefs.vaultPath.trim(),
@@ -63,17 +150,100 @@ export default function Command() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function handleCreateTodo() {
+    if (!searchText.trim()) return;
+
+    try {
+      if (!prefs.vaultPath?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Vault path not set" });
+        return;
+      }
+
+      if (!prefs.basesTodoFile?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Bases HyperDASH file not set" });
+        return;
+      }
+
+      // Get todo tag from bases file
+      const todoFromBases = await readBasesTag(prefs.basesTodoFile.trim());
+
+      if (!todoFromBases) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in HyperDASH file",
+          message: "Check that your hyperdash.base file contains tags.containsAny() or tags.contains()"
+        });
+        return;
+      }
+
+      const todoTags = todoFromBases.split(',').map(t => t.trim()).filter(Boolean);
+      const todoTag = todoTags[0];
+
+      // Create new todo note (no dates - set later via actions)
+      await createTodoNote(prefs.vaultPath.trim(), searchText.trim(), todoTag);
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Todo Created",
+        message: searchText.trim()
+      });
+
+      // Clear search and refresh
+      setSearchText("");
+      await load();
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to create todo", message: error.message });
+    }
+  }
+
   // Group todos by status
   const todos = useMemo(() => notes.filter((n) => n.hasTodoTag), [notes]);
-  const inProgress = useMemo(() => todos.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [todos]);
-  const upNext = useMemo(() => todos.filter((n) => n.status === "next" || n.status === "up next").sort(sortByMtimeDesc), [todos]);
-  const todoItems = useMemo(() => todos.filter((n) => n.status === "todo" || n.status === "not started" || n.status === "open" || !n.status).sort(sortByMtimeDesc), [todos]);
-  const holdStuck = useMemo(() => todos.filter((n) => n.status === "hold/stuck" || n.status === "stuck" || n.status === "hold").sort(sortByMtimeDesc), [todos]);
-  const waiting = useMemo(() => todos.filter((n) => n.status === "waiting").sort(sortByMtimeDesc), [todos]);
-  const someday = useMemo(() => todos.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [todos]);
+
+  // Filter todos by search text
+  const filteredTodos = useMemo(() => {
+    if (!searchText.trim()) return todos;
+    const searchLower = searchText.trim().toLowerCase();
+    return todos.filter((n) => n.title.toLowerCase().includes(searchLower));
+  }, [todos, searchText]);
+
+  const inProgress = useMemo(() => filteredTodos.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [filteredTodos]);
+  const upNext = useMemo(() => filteredTodos.filter((n) => n.status === "next" || n.status === "up next").sort(sortByMtimeDesc), [filteredTodos]);
+  const todoItems = useMemo(() => filteredTodos.filter((n) => n.status === "todo" || n.status === "not started" || n.status === "open" || !n.status).sort(sortByMtimeDesc), [filteredTodos]);
+  const holdStuck = useMemo(() => filteredTodos.filter((n) => n.status === "hold/stuck" || n.status === "stuck" || n.status === "hold").sort(sortByMtimeDesc), [filteredTodos]);
+  const waiting = useMemo(() => filteredTodos.filter((n) => n.status === "waiting").sort(sortByMtimeDesc), [filteredTodos]);
+  const someday = useMemo(() => filteredTodos.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredTodos]);
+
+  // Check if search text exactly matches any existing todo
+  const showCreateOption = useMemo(() => {
+    if (!searchText.trim()) return false;
+    const searchLower = searchText.trim().toLowerCase();
+    return !todos.some(todo => todo.title.toLowerCase() === searchLower);
+  }, [searchText, todos]);
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Search notes by title…">
+    <List
+      isLoading={isLoading}
+      searchBarPlaceholder="Search notes by title…"
+      onSearchTextChange={setSearchText}
+      searchText={searchText}
+    >
+      {showCreateOption && (
+        <List.Section title="Create New">
+          <List.Item
+            title={`Create New Todo: "${searchText.trim()}"`}
+            icon={Icon.Plus}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Create Todo"
+                  icon={Icon.Plus}
+                  onAction={handleCreateTodo}
+                />
+              </ActionPanel>
+            }
+          />
+        </List.Section>
+      )}
       {inProgress.length > 0 && (
         <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
           {inProgress.map((n) => (
@@ -178,22 +348,36 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   const prefs = getPreferenceValues<Prefs>();
   const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<string[]>([]);
-  const [newProjectName, setNewProjectName] = useState<string>("");
+  const [searchText, setSearchText] = useState<string>("");
 
   useEffect(() => {
     async function loadProjects() {
       try {
-        // Use projectPath if set, otherwise fall back to vaultPath
-        const scanPath = prefs.projectPath?.trim() || prefs.vaultPath;
-        if (!scanPath) return;
+        if (!prefs.projectPath?.trim()) {
+          await showToast({ style: Toast.Style.Failure, title: "Project path not set" });
+          return;
+        }
 
-        // Get project tags from bases file or preferences
-        const projectFromBases = prefs.basesProjectFile?.trim()
-          ? await readBasesTag(prefs.basesProjectFile.trim())
-          : undefined;
+        const scanPath = prefs.projectPath.trim();
 
-        const projectTagRaw = projectFromBases || prefs.projectTag || "project";
-        const projectTags = projectTagRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+        if (!prefs.basesProjectFile?.trim()) {
+          await showToast({ style: Toast.Style.Failure, title: "Bases Project file not set" });
+          return;
+        }
+
+        // Get project tags from bases file
+        const projectFromBases = await readBasesTag(prefs.basesProjectFile.trim());
+
+        if (!projectFromBases) {
+          await showToast({
+            style: Toast.Style.Failure,
+            title: "No tags found in Project file",
+            message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+          });
+          return;
+        }
+
+        const projectTags = projectFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
 
         const projectList = await scanProjects(scanPath, projectTags);
         setProjects(projectList);
@@ -205,6 +389,20 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
     }
     loadProjects();
   }, []);
+
+  // Filter projects by search text
+  const filteredProjects = useMemo(() => {
+    if (!searchText.trim()) return projects;
+    const searchLower = searchText.trim().toLowerCase();
+    return projects.filter((proj) => proj.toLowerCase().includes(searchLower));
+  }, [projects, searchText]);
+
+  // Check if search text exactly matches any existing project
+  const showCreateOption = useMemo(() => {
+    if (!searchText.trim()) return false;
+    const searchLower = searchText.trim().toLowerCase();
+    return !projects.some(proj => proj.toLowerCase() === searchLower);
+  }, [searchText, projects]);
 
   async function handleSelectProject(projectName: string) {
     try {
@@ -222,30 +420,41 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   }
 
   async function handleCreateAndSet() {
-    if (!newProjectName.trim()) return;
+    if (!searchText.trim()) return;
 
     try {
-      // Use projectPath if set, otherwise fall back to vaultPath
-      const createPath = prefs.projectPath?.trim() || prefs.vaultPath;
-      if (!createPath) {
-        await showToast({ style: Toast.Style.Failure, title: "Vault path not set" });
+      if (!prefs.projectPath?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Project path not set" });
         return;
       }
 
-      // Get project tag from bases file or preferences
-      const projectFromBases = prefs.basesProjectFile?.trim()
-        ? await readBasesTag(prefs.basesProjectFile.trim())
-        : undefined;
+      const createPath = prefs.projectPath.trim();
 
-      const projectTagRaw = projectFromBases || prefs.projectTag || "project";
-      const projectTags = projectTagRaw.split(',').map(t => t.trim()).filter(Boolean);
-      const projectTag = projectTags[0] || "project";
+      if (!prefs.basesProjectFile?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Bases Project file not set" });
+        return;
+      }
 
-      // Create new project note
-      await createProjectNote(createPath, newProjectName.trim(), projectTag);
+      // Get project tag from bases file
+      const projectFromBases = await readBasesTag(prefs.basesProjectFile.trim());
+
+      if (!projectFromBases) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in Project file",
+          message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+        });
+        return;
+      }
+
+      const projectTags = projectFromBases.split(',').map(t => t.trim()).filter(Boolean);
+      const projectTag = projectTags[0];
+
+      // Create new project note (no dates - set later via actions)
+      await createProjectNote(createPath, searchText.trim(), projectTag);
 
       // Set it on the todo
-      await updateNoteProject(note.path, newProjectName.trim());
+      await updateNoteProject(note.path, searchText.trim());
 
       await showToast({
         style: Toast.Style.Success,
@@ -279,8 +488,26 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       isLoading={isLoading}
       navigationTitle={`Set Project: ${note.title}`}
       searchBarPlaceholder="Search projects or type new name..."
-      onSearchTextChange={(text) => setNewProjectName(text)}
+      onSearchTextChange={setSearchText}
+      searchText={searchText}
     >
+      {showCreateOption && (
+        <List.Section title="Create New">
+          <List.Item
+            title={`Create New Project: "${searchText.trim()}"`}
+            icon={Icon.Plus}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Create & Set Project"
+                  icon={Icon.Plus}
+                  onAction={handleCreateAndSet}
+                />
+              </ActionPanel>
+            }
+          />
+        </List.Section>
+      )}
       <List.Section title={`Current: ${note.project || "none"}`}>
         {note.project && (
           <List.Item
@@ -297,24 +524,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
             }
           />
         )}
-        {newProjectName.trim() && !projects.includes(newProjectName.trim()) && (
-          <List.Item
-            title={`Create New: "${newProjectName.trim()}"`}
-            icon={Icon.Plus}
-            actions={
-              <ActionPanel>
-                <Action
-                  title="Create & Set Project"
-                  icon={Icon.Plus}
-                  onAction={handleCreateAndSet}
-                />
-              </ActionPanel>
-            }
-          />
-        )}
       </List.Section>
       <List.Section title="Existing Projects">
-        {projects.map((proj) => (
+        {filteredProjects.map((proj) => (
           <List.Item
             key={proj}
             title={proj}
@@ -338,6 +550,20 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
 
 function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
   const accessories = [];
+  if (note.dateDue) {
+    const overdue = isOverdue(note.dateDue);
+    const today = isToday(note.dateDue);
+    let iconColor: Color | undefined = undefined;
+    if (overdue) {
+      iconColor = Color.Red;
+    } else if (today) {
+      iconColor = Color.Green;
+    }
+    accessories.push({
+      text: formatDate(note.dateDue),
+      icon: { source: Icon.Calendar, tintColor: iconColor }
+    });
+  }
   if (note.project) {
     accessories.push({ text: note.project, icon: Icon.Folder });
   }
@@ -395,6 +621,16 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
             icon={Icon.Folder}
             target={<SetProjectForm note={note} onProjectUpdated={onRefresh} />}
           />
+          <Action.PickDate
+            title="Set Due Date"
+            icon={Icon.Calendar}
+            onChange={(date) => handleDateChange("date_due", "Due Date", date)}
+          />
+          <Action.PickDate
+            title="Set Start Date"
+            icon={Icon.PlayFilled}
+            onChange={(date) => handleDateChange("date_started", "Start Date", date)}
+          />
           <Action.OpenInBrowser
             title="Open in Obsidian"
             url={`obsidian://open?path=${encodeURIComponent(note.path)}`}
@@ -403,24 +639,6 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
           <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
-
-          <ActionPanel.Section title="Set Dates">
-            <Action.PickDate
-              title="Set Due Date"
-              icon={Icon.Calendar}
-              onChange={(date) => handleDateChange("date_due", "Due Date", date)}
-            />
-            <Action.PickDate
-              title="Set Start Date"
-              icon={Icon.PlayFilled}
-              onChange={(date) => handleDateChange("date_started", "Start Date", date)}
-            />
-            <Action.PickDate
-              title="Set Scheduled Date"
-              icon={Icon.Clock}
-              onChange={(date) => handleDateChange("scheduled", "Scheduled Date", date)}
-            />
-          </ActionPanel.Section>
         </ActionPanel>
       }
     />
