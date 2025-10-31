@@ -7,14 +7,7 @@
 
 /* eslint-disable @typescript-eslint/ban-types */
 
-type ExtensionPreferences = {}
-
-/** Preferences accessible in all the extension's commands */
-declare type Preferences = ExtensionPreferences
-
-declare namespace Preferences {
-  /** Preferences accessible in the `browse` command */
-  export type Browse = ExtensionPreferences & {
+type ExtensionPreferences = {
   /** Vault Path (Todos) - Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance) */
   "vaultPath": string,
   /** Project Path - Path to scan for projects. Set to full vault root for all projects. */
@@ -24,13 +17,15 @@ declare namespace Preferences {
   /** Bases Project File - Path to your Bases project.base file containing project tag definitions */
   "basesProjectFile": string
 }
+
+/** Preferences accessible in all the extension's commands */
+declare type Preferences = ExtensionPreferences
+
+declare namespace Preferences {
+  /** Preferences accessible in the `browse` command */
+  export type Browse = ExtensionPreferences & {}
   /** Preferences accessible in the `projects` command */
-  export type Projects = ExtensionPreferences & {
-  /** Project Path - Path to scan for projects. Set to full vault root for all projects. */
-  "projectPath": string,
-  /** Bases Project File - Path to your Bases project.base file containing project tag definitions */
-  "basesProjectFile": string
-}
+  export type Projects = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
