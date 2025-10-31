@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate } from "./utils";
 import { readBasesTag } from "./bases";
@@ -130,10 +130,12 @@ export default function Command() {
 
   // Group projects by status
   const planning = useMemo(() => filteredProjects.filter((n) => n.status === "planning").sort(sortByMtimeDesc), [filteredProjects]);
+  const research = useMemo(() => filteredProjects.filter((n) => n.status === "research").sort(sortByMtimeDesc), [filteredProjects]);
   const inProgress = useMemo(() => filteredProjects.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [filteredProjects]);
   const active = useMemo(() => filteredProjects.filter((n) => n.status === "active").sort(sortByMtimeDesc), [filteredProjects]);
   const onHold = useMemo(() => filteredProjects.filter((n) => n.status === "on-hold" || n.status === "hold" || n.status === "paused").sort(sortByMtimeDesc), [filteredProjects]);
-  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused")).sort(sortByMtimeDesc), [filteredProjects]);
+  const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
+  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
 
   return (
     <List
@@ -145,6 +147,13 @@ export default function Command() {
       {planning.length > 0 && (
         <List.Section title={`Planning (${planning.length})`} subtitle="status: planning">
           {planning.map((n) => (
+            <ProjectItem key={n.path} note={n} onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
+      {research.length > 0 && (
+        <List.Section title={`Research (${research.length})`} subtitle="status: research">
+          {research.map((n) => (
             <ProjectItem key={n.path} note={n} onRefresh={load} />
           ))}
         </List.Section>
@@ -170,6 +179,13 @@ export default function Command() {
           ))}
         </List.Section>
       )}
+      {someday.length > 0 && (
+        <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
+          {someday.map((n) => (
+            <ProjectItem key={n.path} note={n} onRefresh={load} />
+          ))}
+        </List.Section>
+      )}
       {other.length > 0 && (
         <List.Section title={`Other (${other.length})`}>
           {other.map((n) => (
@@ -177,6 +193,59 @@ export default function Command() {
           ))}
         </List.Section>
       )}
+    </List>
+  );
+}
+
+function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated: () => void }) {
+  const { pop } = useNavigation();
+  const statuses = [
+    { value: "planning", title: "Planning", icon: Icon.Pencil },
+    { value: "research", title: "Research", icon: Icon.MagnifyingGlass },
+    { value: "in-progress", title: "In Progress", icon: Icon.CircleProgress },
+    { value: "active", title: "Active", icon: Icon.CheckCircle },
+    { value: "on-hold", title: "On Hold", icon: Icon.Pause },
+    { value: "someday", title: "Someday", icon: Icon.Calendar },
+    { value: "done", title: "Done", icon: Icon.CheckCircle },
+    { value: "canceled", title: "Canceled", icon: Icon.XMarkCircle }
+  ];
+
+  async function handleStatusChange(newStatus: string) {
+    try {
+      await updateNoteStatus(note.path, newStatus);
+      await showToast({
+        style: Toast.Style.Success,
+        title: `Set Status: ${newStatus}`,
+        message: note.title
+      });
+      onStatusUpdated();
+      pop();
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+    }
+  }
+
+  return (
+    <List navigationTitle={`Set Status: ${note.title}`} searchBarPlaceholder="Choose new status...">
+      <List.Section title={`Current: ${note.status || "none"}`}>
+        {statuses.map((s) => (
+          <List.Item
+            key={s.value}
+            title={s.title}
+            icon={s.icon}
+            accessories={s.value === note.status ? [{ text: "Current" }] : []}
+            actions={
+              <ActionPanel>
+                <Action
+                  title={`Set to ${s.title}`}
+                  icon={Icon.Checkmark}
+                  onAction={() => handleStatusChange(s.value)}
+                />
+              </ActionPanel>
+            }
+          />
+        ))}
+      </List.Section>
     </List>
   );
 }
@@ -203,14 +272,18 @@ function ProjectItem({ note, onRefresh }: { note: Note; onRefresh: () => void })
 
   // Determine icon based on status
   let itemIcon = Icon.Folder;
-  if (note.status === "in-progress") {
+  if (note.status === "planning") {
+    itemIcon = Icon.Pencil;
+  } else if (note.status === "research") {
+    itemIcon = Icon.MagnifyingGlass;
+  } else if (note.status === "in-progress") {
     itemIcon = Icon.CircleProgress;
   } else if (note.status === "active") {
     itemIcon = Icon.CheckCircle;
-  } else if (note.status === "planning") {
-    itemIcon = Icon.Pencil;
   } else if (note.status === "on-hold" || note.status === "hold" || note.status === "paused") {
     itemIcon = Icon.Pause;
+  } else if (note.status === "someday") {
+    itemIcon = Icon.Calendar;
   }
 
   async function handleDateChange(field: string, fieldLabel: string, date: Date | null) {
@@ -228,20 +301,6 @@ function ProjectItem({ note, onRefresh }: { note: Note; onRefresh: () => void })
     }
   }
 
-  async function handleStatusChange(newStatus: string) {
-    try {
-      await updateNoteStatus(note.path, newStatus);
-      await showToast({
-        style: Toast.Style.Success,
-        title: "Status Updated",
-        message: note.title
-      });
-      onRefresh();
-    } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
-    }
-  }
-
   return (
     <List.Item
       title={note.title}
@@ -249,28 +308,11 @@ function ProjectItem({ note, onRefresh }: { note: Note; onRefresh: () => void })
       accessories={accessories}
       actions={
         <ActionPanel>
-          <ActionPanel.Section title="Set Status">
-            <Action
-              title="Planning"
-              icon={Icon.Pencil}
-              onAction={() => handleStatusChange("planning")}
-            />
-            <Action
-              title="In Progress"
-              icon={Icon.CircleProgress}
-              onAction={() => handleStatusChange("in-progress")}
-            />
-            <Action
-              title="Active"
-              icon={Icon.CheckCircle}
-              onAction={() => handleStatusChange("active")}
-            />
-            <Action
-              title="On Hold"
-              icon={Icon.Pause}
-              onAction={() => handleStatusChange("on-hold")}
-            />
-          </ActionPanel.Section>
+          <Action.Push
+            title="Set Status"
+            icon={Icon.Pencil}
+            target={<SetStatusForm note={note} onStatusUpdated={onRefresh} />}
+          />
           <Action.PickDate
             title="Set Due Date"
             icon={Icon.Calendar}
