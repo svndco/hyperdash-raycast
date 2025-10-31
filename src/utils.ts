@@ -85,15 +85,15 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
         const rawDateScheduled = (parsed.data as any)?.date_scheduled || (parsed.data as any)?.dateScheduled || (parsed.data as any)?.scheduled;
         const dateScheduled = typeof rawDateScheduled === "string" ? rawDateScheduled.trim() : undefined;
 
-        // Filter out done and canceled todos
-        const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
-        if (isDoneOrCanceled) {
-          return; // Skip this note
-        }
-
         // Check if note has any of the specified todo or project tags
         const hasTodoTag = todoTags.some(todoTag => tags.includes(todoTag));
         const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
+
+        // Filter out done and canceled todos (but not projects)
+        const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
+        if (isDoneOrCanceled && hasTodoTag && !hasProjectTag) {
+          return; // Skip this todo note
+        }
 
         notes.push({
           title,

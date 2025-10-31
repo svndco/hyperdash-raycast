@@ -131,11 +131,11 @@ export default function Command() {
   // Group projects by status
   const planning = useMemo(() => filteredProjects.filter((n) => n.status === "planning").sort(sortByMtimeDesc), [filteredProjects]);
   const research = useMemo(() => filteredProjects.filter((n) => n.status === "research").sort(sortByMtimeDesc), [filteredProjects]);
-  const inProgress = useMemo(() => filteredProjects.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [filteredProjects]);
-  const active = useMemo(() => filteredProjects.filter((n) => n.status === "active").sort(sortByMtimeDesc), [filteredProjects]);
+  const upNext = useMemo(() => filteredProjects.filter((n) => n.status === "up-next" || n.status === "up next").sort(sortByMtimeDesc), [filteredProjects]);
+  const inProgress = useMemo(() => filteredProjects.filter((n) => n.status === "in-progress" || n.status === "active").sort(sortByMtimeDesc), [filteredProjects]);
   const onHold = useMemo(() => filteredProjects.filter((n) => n.status === "on-hold" || n.status === "hold" || n.status === "paused").sort(sortByMtimeDesc), [filteredProjects]);
   const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
-  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
+  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
 
   return (
     <List
@@ -158,16 +158,16 @@ export default function Command() {
           ))}
         </List.Section>
       )}
-      {inProgress.length > 0 && (
-        <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
-          {inProgress.map((n) => (
+      {upNext.length > 0 && (
+        <List.Section title={`Up Next (${upNext.length})`} subtitle="status: up-next">
+          {upNext.map((n) => (
             <ProjectItem key={n.path} note={n} onRefresh={load} />
           ))}
         </List.Section>
       )}
-      {active.length > 0 && (
-        <List.Section title={`Active (${active.length})`} subtitle="status: active">
-          {active.map((n) => (
+      {inProgress.length > 0 && (
+        <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
+          {inProgress.map((n) => (
             <ProjectItem key={n.path} note={n} onRefresh={load} />
           ))}
         </List.Section>
@@ -202,8 +202,8 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
   const statuses = [
     { value: "planning", title: "Planning", icon: Icon.Pencil },
     { value: "research", title: "Research", icon: Icon.MagnifyingGlass },
+    { value: "up-next", title: "Up Next", icon: Icon.ArrowRight },
     { value: "in-progress", title: "In Progress", icon: Icon.CircleProgress },
-    { value: "active", title: "Active", icon: Icon.CheckCircle },
     { value: "on-hold", title: "On Hold", icon: Icon.Pause },
     { value: "someday", title: "Someday", icon: Icon.Calendar },
     { value: "done", title: "Done", icon: Icon.CheckCircle },
@@ -276,10 +276,10 @@ function ProjectItem({ note, onRefresh }: { note: Note; onRefresh: () => void })
     itemIcon = Icon.Pencil;
   } else if (note.status === "research") {
     itemIcon = Icon.MagnifyingGlass;
-  } else if (note.status === "in-progress") {
+  } else if (note.status === "up-next" || note.status === "up next") {
+    itemIcon = Icon.ArrowRight;
+  } else if (note.status === "in-progress" || note.status === "active") {
     itemIcon = Icon.CircleProgress;
-  } else if (note.status === "active") {
-    itemIcon = Icon.CheckCircle;
   } else if (note.status === "on-hold" || note.status === "hold" || note.status === "paused") {
     itemIcon = Icon.Pause;
   } else if (note.status === "someday") {

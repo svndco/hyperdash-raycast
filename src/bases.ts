@@ -11,9 +11,17 @@ export async function readBasesTag(filePath: string): Promise<string | undefined
     if (Array.isArray(orList)) {
       for (const item of orList) {
         if (typeof item === "string") {
-          // Match tags.containsAny("ja/todo", "ae/todo") and extract first tag
-          const mAny = item.match(/tags\.containsAny\(["']([^"']+)["']/i);
-          if (mAny?.[1]) return mAny[1].trim().toLowerCase();
+          // Match tags.containsAny("ja/todo", "ae/todo") and extract ALL tags
+          const anyMatch = item.match(/tags\.containsAny\((.*?)\)/i);
+          if (anyMatch?.[1]) {
+            // Extract all quoted strings from the containsAny arguments
+            const tags = anyMatch[1].match(/["']([^"']+)["']/g);
+            if (tags && tags.length > 0) {
+              // Remove quotes and join with comma
+              const tagList = tags.map(t => t.replace(/["']/g, '').trim().toLowerCase()).join(', ');
+              return tagList;
+            }
+          }
 
           // Also try regular contains
           const m = item.match(/tags\.contains\(["'](.+?)["']\)/i);
