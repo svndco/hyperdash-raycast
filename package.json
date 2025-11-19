@@ -6,6 +6,9 @@
   "description": "Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
   "icon": "icon.png",
   "author": "svndco",
+  "contributors": [
+    "Jeremy Allen"
+  ],
   "license": "MIT",
   "keywords": [
     "obsidian",
