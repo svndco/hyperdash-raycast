@@ -15,7 +15,15 @@ type ExtensionPreferences = {
   /** Bases HyperDASH File - Path to your Bases hyperdash.base file containing todo tag definitions */
   "basesTodoFile": string,
   /** Bases Project File - Path to your Bases project.base file containing project tag definitions */
-  "basesProjectFile": string
+  "basesProjectFile": string,
+  /** Display Features - Display recurrence patterns for recurring tasks */
+  "showRecurrence": boolean,
+  /** undefined - Display task priority (use alphabetical names: 1-urgent, 2-high, 3-medium, 4-low) */
+  "showPriority": boolean,
+  /** undefined - Display time tracked and estimates */
+  "showTimeTracking": boolean,
+  /** Performance - Maximum number of tasks to display (default: 500, helps with large vaults) */
+  "maxResults": string
 }
 
 /** Preferences accessible in all the extension's commands */

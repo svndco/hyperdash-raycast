@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "hyperdash-dev",
   "title": "hyperDASH: Projects & Task Notes",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "hyperDASH (hd): Obsidian Projects & Tasks (Bases-compatible, tag-only todos).",
   "icon": "hd-icon.png",
   "author": "your-name",
