@@ -5,7 +5,7 @@
 
   **A Raycast extension for managing Obsidian Projects and Tasks**
 
-  ![Version](https://img.shields.io/badge/version-1.0.0-green)
+  ![Version](https://img.shields.io/badge/version-1.0.1-green)
   ![License](https://img.shields.io/badge/license-MIT-blue)
   ![TaskNotes](https://img.shields.io/badge/TaskNotes-4.0.1-orange)
 </div>
