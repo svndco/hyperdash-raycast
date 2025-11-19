@@ -45,6 +45,40 @@
       "title": "Bases Project File",
       "description": "Path to your Bases project.base file containing project tag definitions",
       "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
+    },
+    {
+      "name": "showRecurrence",
+      "type": "checkbox",
+      "required": false,
+      "title": "Display Features",
+      "label": "Show recurrence info",
+      "description": "Display recurrence patterns for recurring tasks",
+      "default": true
+    },
+    {
+      "name": "showPriority",
+      "type": "checkbox",
+      "required": false,
+      "label": "Show priority",
+      "description": "Display task priority (use alphabetical names: 1-urgent, 2-high, 3-medium, 4-low)",
+      "default": true
+    },
+    {
+      "name": "showTimeTracking",
+      "type": "checkbox",
+      "required": false,
+      "label": "Show time tracking",
+      "description": "Display time tracked and estimates",
+      "default": false
+    },
+    {
+      "name": "maxResults",
+      "type": "textfield",
+      "required": false,
+      "title": "Performance",
+      "description": "Maximum number of tasks to display (default: 500, helps with large vaults)",
+      "placeholder": "500",
+      "default": "500"
     }
   ],
   "scripts": {

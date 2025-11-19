@@ -19,6 +19,11 @@ export type Note = {
   dateDue?: string;
   dateStarted?: string;
   dateScheduled?: string;
+  recurrence?: string;
+  recurrenceAnchor?: string;
+  priority?: string;
+  timeTracked?: number;
+  timeEstimate?: number;
 };
 
 function normalizeTags(value: unknown): string[] {
@@ -85,6 +90,24 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
         const rawDateScheduled = (parsed.data as any)?.date_scheduled || (parsed.data as any)?.dateScheduled || (parsed.data as any)?.scheduled;
         const dateScheduled = typeof rawDateScheduled === "string" ? rawDateScheduled.trim() : undefined;
 
+        // Extract recurrence fields (TaskNotes 4.0.1 compatibility)
+        const rawRecurrence = (parsed.data as any)?.recurrence;
+        const recurrence = typeof rawRecurrence === "string" ? rawRecurrence.trim() : undefined;
+
+        const rawRecurrenceAnchor = (parsed.data as any)?.recurrence_anchor || (parsed.data as any)?.recurrenceAnchor;
+        const recurrenceAnchor = typeof rawRecurrenceAnchor === "string" ? rawRecurrenceAnchor.trim() : undefined;
+
+        // Extract priority (alphabetical sorting as per TaskNotes 4.0.1)
+        const rawPriority = (parsed.data as any)?.priority || (parsed.data as any)?.Priority;
+        const priority = typeof rawPriority === "string" ? rawPriority.trim() : undefined;
+
+        // Extract time tracking fields
+        const rawTimeTracked = (parsed.data as any)?.time_tracked || (parsed.data as any)?.timeTracked;
+        const timeTracked = typeof rawTimeTracked === "number" ? rawTimeTracked : undefined;
+
+        const rawTimeEstimate = (parsed.data as any)?.time_estimate || (parsed.data as any)?.timeEstimate;
+        const timeEstimate = typeof rawTimeEstimate === "number" ? rawTimeEstimate : undefined;
+
         // Check if note has any of the specified todo or project tags
         const hasTodoTag = todoTags.some(todoTag => tags.includes(todoTag));
         const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
@@ -107,7 +130,12 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
           project,
           dateDue,
           dateStarted,
-          dateScheduled
+          dateScheduled,
+          recurrence,
+          recurrenceAnchor,
+          priority,
+          timeTracked,
+          timeEstimate
         });
       } catch {
         // ignore unreadable file

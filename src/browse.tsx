@@ -8,6 +8,10 @@ type Prefs = {
   projectPath: string;
   basesTodoFile: string;
   basesProjectFile: string;
+  showRecurrence?: boolean;
+  showPriority?: boolean;
+  showTimeTracking?: boolean;
+  maxResults?: string;
 };
 
 function formatDate(dateStr: string): string {
@@ -199,11 +203,39 @@ export default function Command() {
   // Group todos by status
   const todos = useMemo(() => notes.filter((n) => n.hasTodoTag), [notes]);
 
-  // Filter todos by search text
+  // Filter todos by search text with performance limit
   const filteredTodos = useMemo(() => {
-    if (!searchText.trim()) return todos;
-    const searchLower = searchText.trim().toLowerCase();
-    return todos.filter((n) => n.title.toLowerCase().includes(searchLower));
+    const prefs = getPreferenceValues<Prefs>();
+    const maxResults = parseInt(prefs.maxResults || "500", 10);
+
+    let filtered = todos;
+    if (searchText.trim()) {
+      const searchLower = searchText.trim().toLowerCase();
+      filtered = todos.filter((n) => n.title.toLowerCase().includes(searchLower));
+    }
+
+    // Sort by priority (alphabetical), then by due date, then by mtime
+    filtered = filtered.sort((a, b) => {
+      // Priority first (alphabetical sorting as per TaskNotes 4.0.1)
+      if (a.priority && b.priority) {
+        const priorityCompare = a.priority.localeCompare(b.priority);
+        if (priorityCompare !== 0) return priorityCompare;
+      } else if (a.priority) return -1;
+      else if (b.priority) return 1;
+
+      // Then by due date
+      if (a.dateDue && b.dateDue) {
+        const dateCompare = a.dateDue.localeCompare(b.dateDue);
+        if (dateCompare !== 0) return dateCompare;
+      } else if (a.dateDue) return -1;
+      else if (b.dateDue) return 1;
+
+      // Finally by modification time
+      return b.mtimeMs - a.mtimeMs;
+    });
+
+    // Apply performance limit
+    return filtered.slice(0, maxResults);
   }, [todos, searchText]);
 
   const inProgress = useMemo(() => filteredTodos.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [filteredTodos]);
@@ -549,7 +581,15 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
 }
 
 function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
+  const prefs = getPreferenceValues<Prefs>();
   const accessories = [];
+
+  // Priority (shown first if enabled)
+  if (prefs.showPriority !== false && note.priority) {
+    accessories.push({ text: note.priority, icon: Icon.Flag });
+  }
+
+  // Due date
   if (note.dateDue) {
     const overdue = isOverdue(note.dateDue);
     const today = isToday(note.dateDue);
@@ -564,9 +604,29 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
       icon: { source: Icon.Calendar, tintColor: iconColor }
     });
   }
+
+  // Recurrence info
+  if (prefs.showRecurrence !== false && note.recurrence) {
+    const recurrenceIcon = note.recurrenceAnchor === "completion" ? Icon.Repeat : Icon.Calendar;
+    accessories.push({ text: note.recurrence, icon: recurrenceIcon, tooltip: note.recurrenceAnchor ? `Recurs from ${note.recurrenceAnchor}` : undefined });
+  }
+
+  // Time tracking
+  if (prefs.showTimeTracking && (note.timeTracked || note.timeEstimate)) {
+    const timeText = note.timeTracked && note.timeEstimate
+      ? `${note.timeTracked}h / ${note.timeEstimate}h`
+      : note.timeTracked
+        ? `${note.timeTracked}h tracked`
+        : `${note.timeEstimate}h est`;
+    accessories.push({ text: timeText, icon: Icon.Clock });
+  }
+
+  // Project
   if (note.project) {
     accessories.push({ text: note.project, icon: Icon.Folder });
   }
+
+  // Status
   if (note.status) {
     accessories.push({ text: note.status });
   }
