@@ -1,12 +1,21 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "hyperdash-dev",
+  "name": "hyperdash",
   "title": "hyperDASH: Projects & Task Notes",
-  "version": "0.3.1",
-  "description": "hyperDASH (hd): Obsidian Projects & Tasks (Bases-compatible, tag-only todos).",
-  "icon": "hd-icon.png",
-  "author": "your-name",
+  "version": "1.0.1",
+  "description": "Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
+  "icon": "icon.png",
+  "author": "svndco",
   "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "tasks",
+    "projects",
+    "productivity",
+    "tasknotes",
+    "todo",
+    "notes"
+  ],
   "categories": [
     "Productivity"
   ],
@@ -92,7 +101,7 @@
       "subtitle": "hyperDASH",
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
       "mode": "view",
-      "icon": "hd-icon.png",
+      "icon": "icon.png",
       "path": "src/browse.tsx"
     },
     {
@@ -101,7 +110,7 @@
       "subtitle": "hyperDASH",
       "description": "List Projects (Bases-compatible)",
       "mode": "view",
-      "icon": "hd-icon.png",
+      "icon": "icon.png",
       "path": "src/projects.tsx"
     }
   ],

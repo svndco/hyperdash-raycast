@@ -1,6 +1,18 @@
-# hyperDASH (hd): Projects & Task Notes (TaskNotes 4.0.1 Compatible)
+# hyperDASH: Projects & Task Notes
 
-A Raycast extension for managing Obsidian Projects and Tasks with full TaskNotes 4.0.1 compatibility.
+<div align="center">
+  <img src="icon.png" width="128" height="128" alt="hyperDASH Icon">
+
+  **A Raycast extension for managing Obsidian Projects and Tasks**
+
+  ![Version](https://img.shields.io/badge/version-1.0.0-green)
+  ![License](https://img.shields.io/badge/license-MIT-blue)
+  ![TaskNotes](https://img.shields.io/badge/TaskNotes-4.0.1-orange)
+</div>
+
+---
+
+A powerful Raycast extension for managing Obsidian Projects and Tasks with full TaskNotes 4.0.1 compatibility. Seamlessly browse, filter, and organize your Obsidian vault's tasks and projects directly from Raycast.
 
 ## Features
 
@@ -117,4 +129,39 @@ If upgrading from a version before TaskNotes 4.0.1 compatibility:
 1. **Update priority names**: Rename priorities to use alphabetical sorting (e.g., `high` → `1-high`)
 2. **Review recurrence**: Check if any tasks use `recurrence` field and add `recurrence_anchor` if needed
 3. **Adjust max results**: If experiencing slowness, lower the maximum results setting
+
+## Installation
+
+### From Source (Current)
+
+1. Clone or download this repository
+2. Open Terminal and navigate to the extension folder
+3. Run `npm install` to install dependencies
+4. Run `./build.sh` to build the extension
+5. Open Raycast → Extensions → '+' → Add Script Directory
+6. Select the `hyperdash-raycast` folder
+
+### From Raycast Store (Coming Soon)
+
+Search for "hyperDASH" in the Raycast Store and click Install.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/svndco/hyperdash-raycast/issues)
+- **Documentation**: See this README and the [TaskNotes 4.0.1 documentation](https://github.com/terrychenzw/obsidian-task-note)
+
+## Acknowledgments
+
+- Built for [Obsidian](https://obsidian.md/)
+- Compatible with [TaskNotes plugin](https://github.com/terrychenzw/obsidian-task-note) v4.0.1
+- Works with [Obsidian Bases plugin](https://github.com/mProjectsCode/obsidian-bases-plugin)
+- Powered by [Raycast](https://raycast.com/)
 
