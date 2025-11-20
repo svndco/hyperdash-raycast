@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "hyperdash",
   "title": "hyperDASH: Projects & Task Notes",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
   "icon": "icon.png",
   "author": "svndco",
@@ -91,6 +91,15 @@
       "description": "Maximum number of tasks to display (default: 500, helps with large vaults)",
       "placeholder": "500",
       "default": "500"
+    },
+    {
+      "name": "versionInfo",
+      "type": "textfield",
+      "required": false,
+      "title": "Version",
+      "description": "hyperDASH v1.0.3 - TaskNotes 4.0.1 compatible",
+      "placeholder": "v1.0.3",
+      "default": "1.0.3"
     }
   ],
   "scripts": {

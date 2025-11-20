@@ -26,13 +26,19 @@ PATCH="${VERSION_PARTS[2]}"
 NEW_PATCH=$((PATCH + 1))
 NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
 
-# Update package.json with new version
+# Update package.json with new version and version info preference
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
     sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+    sed -i '' "s/\"description\": \"hyperDASH v$CURRENT_VERSION/\"description\": \"hyperDASH v$NEW_VERSION/" package.json
+    sed -i '' "s/\"placeholder\": \"v$CURRENT_VERSION\"/\"placeholder\": \"v$NEW_VERSION\"/" package.json
+    sed -i '' "s/\"default\": \"$CURRENT_VERSION\"/\"default\": \"$NEW_VERSION\"/" package.json
 else
     # Linux
     sed -i "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+    sed -i "s/\"description\": \"hyperDASH v$CURRENT_VERSION/\"description\": \"hyperDASH v$NEW_VERSION/" package.json
+    sed -i "s/\"placeholder\": \"v$CURRENT_VERSION\"/\"placeholder\": \"v$NEW_VERSION\"/" package.json
+    sed -i "s/\"default\": \"$CURRENT_VERSION\"/\"default\": \"$NEW_VERSION\"/" package.json
 fi
 
 echo "New version: $NEW_VERSION"
