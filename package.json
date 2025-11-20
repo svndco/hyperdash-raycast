@@ -1,9 +1,9 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "hyperdash",
-  "title": "Hyperdash: Projects & Task Notes",
-  "version": "1.0.4",
-  "description": "Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
+  "title": "hyperdash",
+  "version": "1.0.7",
+  "description": "v1.0.7 - Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
   "icon": "assets/icon.png",
   "author": "svndco",
   "contributors": [
@@ -31,8 +31,8 @@
       "type": "textfield",
       "required": true,
       "title": "Vault Path (Todos)",
-      "description": "Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance)",
-      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/tc/todo"
+      "description": "Path to scan for todos (e.g., /path/to/vault/todos for better performance)",
+      "placeholder": "/path/to/obsidian/vault/todos"
     },
     {
       "name": "projectPath",
@@ -40,7 +40,7 @@
       "required": true,
       "title": "Project Path",
       "description": "Path to scan for projects. Set to full vault root for all projects.",
-      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes"
+      "placeholder": "/path/to/obsidian/vault"
     },
     {
       "name": "basesTodoFile",
@@ -48,7 +48,7 @@
       "required": true,
       "title": "Bases HyperDASH File",
       "description": "Path to your Bases hyperdash.base file containing todo tag definitions",
-      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperdash.base"
+      "placeholder": "/path/to/obsidian/vault/bases/hyperdash.base"
     },
     {
       "name": "basesProjectFile",
@@ -56,7 +56,7 @@
       "required": true,
       "title": "Bases Project File",
       "description": "Path to your Bases project.base file containing project tag definitions",
-      "placeholder": "/Volumes/SVND_A_013/ja/lab/notes/base/hyperpro.base"
+      "placeholder": "/path/to/obsidian/vault/bases/hyperpro.base"
     },
     {
       "name": "showRecurrence",
@@ -91,20 +91,13 @@
       "description": "Maximum number of tasks to display (default: 500, helps with large vaults)",
       "placeholder": "500",
       "default": "500"
-    },
-    {
-      "name": "versionInfo",
-      "type": "textfield",
-      "required": false,
-      "title": "Version",
-      "description": "hyperDASH v1.0.4 - TaskNotes 4.0.1 compatible",
-      "placeholder": "v1.0.4",
-      "default": "1.0.4"
     }
   ],
   "scripts": {
-    "build": "esbuild src/browse.tsx --bundle --platform=node --format=cjs --external:@raycast/api --outfile=dist/browse.js && esbuild src/projects.tsx --bundle --platform=node --format=cjs --external:@raycast/api --outfile=dist/projects.js",
-    "dev": "ray develop || true"
+    "build": "ray build -e dist",
+    "dev": "ray build -e dist --watch",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix"
   },
   "commands": [
     {
@@ -113,8 +106,7 @@
       "subtitle": "hyperDASH",
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
       "mode": "view",
-      "icon": "assets/icon.png",
-      "path": "src/browse.tsx"
+      "icon": "assets/icon.png"
     },
     {
       "name": "projects",
@@ -122,8 +114,7 @@
       "subtitle": "hyperDASH",
       "description": "List Projects (Bases-compatible)",
       "mode": "view",
-      "icon": "assets/icon.png",
-      "path": "src/projects.tsx"
+      "icon": "assets/icon.png"
     }
   ],
   "dependencies": {

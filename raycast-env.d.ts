@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Vault Path (Todos) - Path to scan for todos (e.g., /path/to/vault/tc/todo for better performance) */
+  /** Vault Path (Todos) - Path to scan for todos (e.g., /path/to/vault/todos for better performance) */
   "vaultPath": string,
   /** Project Path - Path to scan for projects. Set to full vault root for all projects. */
   "projectPath": string,
