@@ -4,8 +4,8 @@
 # Uses Raycast's official 'ray build' command for proper extension compilation
 #
 # Usage:
-#   ./build.sh        - Production build with version increment (uses ray build)
-#   ./build.sh dev    - Development mode with hot reload (uses ray build --watch)
+#   ./build.sh        - Production build with version increment (uses ray build -e dist)
+#   ./build.sh dev    - Development build (uses ray build -e dev)
 #   npm run build     - Build without version increment
 
 set -e  # Exit on error
@@ -17,13 +17,13 @@ cd "$SCRIPT_DIR"
 MODE=${1:-build}
 
 if [ "$MODE" = "dev" ]; then
-    echo "🚀 Starting Raycast development mode..."
-    echo "📝 Files will auto-rebuild on save"
-    echo "🔄 Raycast will hot-reload your extension"
-    echo ""
-    echo "Press Ctrl+C to stop"
+    echo "🚀 Building extension in development mode..."
+    echo "📝 After importing to Raycast, changes require rebuild"
     echo ""
     npm run dev
+    echo ""
+    echo "✅ Development build complete!"
+    echo "💡 Tip: Reimport extension in Raycast to see changes"
 else
     echo "🔨 Building HyperDASH Raycast Extension (Production)..."
     

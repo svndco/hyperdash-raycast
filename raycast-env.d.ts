@@ -8,13 +8,13 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Vault Path (Todos) - Path to scan for todos (e.g., /path/to/vault/todos for better performance) */
+  /** Task Notes Path - Path to scan for todos (e.g., /path/to/vault/todos for better performance) */
   "vaultPath": string,
   /** Project Path - Path to scan for projects. Set to full vault root for all projects. */
   "projectPath": string,
-  /** Bases HyperDASH File - Path to your Bases hyperdash.base file containing todo tag definitions */
+  /** Todo Base Path - Path to your Bases .base file containing todo tag definitions */
   "basesTodoFile": string,
-  /** Bases Project File - Path to your Bases project.base file containing project tag definitions */
+  /** Project Base Path - Path to your Bases .base file containing project tag definitions */
   "basesProjectFile": string,
   /** Display Features - Display recurrence patterns for recurring tasks */
   "showRecurrence": boolean,

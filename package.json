@@ -4,7 +4,7 @@
   "title": "hyperdash",
   "version": "1.0.7",
   "description": "v1.0.7 - Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
-  "icon": "assets/icon.png",
+  "icon": "icon.png",
   "author": "svndco",
   "contributors": [
     "Jeremy Allen"
@@ -30,7 +30,7 @@
       "name": "vaultPath",
       "type": "textfield",
       "required": true,
-      "title": "Vault Path (Todos)",
+      "title": "Task Notes Path",
       "description": "Path to scan for todos (e.g., /path/to/vault/todos for better performance)",
       "placeholder": "/path/to/obsidian/vault/todos"
     },
@@ -46,16 +46,16 @@
       "name": "basesTodoFile",
       "type": "textfield",
       "required": true,
-      "title": "Bases HyperDASH File",
-      "description": "Path to your Bases hyperdash.base file containing todo tag definitions",
+      "title": "Todo Base Path",
+      "description": "Path to your Bases .base file containing todo tag definitions",
       "placeholder": "/path/to/obsidian/vault/bases/hyperdash.base"
     },
     {
       "name": "basesProjectFile",
       "type": "textfield",
       "required": true,
-      "title": "Bases Project File",
-      "description": "Path to your Bases project.base file containing project tag definitions",
+      "title": "Project Base Path",
+      "description": "Path to your Bases .base file containing project tag definitions",
       "placeholder": "/path/to/obsidian/vault/bases/hyperpro.base"
     },
     {
@@ -95,7 +95,7 @@
   ],
   "scripts": {
     "build": "ray build -e dist",
-    "dev": "ray build -e dist --watch",
+    "dev": "ray build -e dev",
     "lint": "ray lint",
     "fix-lint": "ray lint --fix"
   },
@@ -105,16 +105,14 @@
       "title": "Task Notes",
       "subtitle": "hyperDASH",
       "description": "List Todos (tag-only) and Projects (Bases-compatible)",
-      "mode": "view",
-      "icon": "assets/icon.png"
+      "mode": "view"
     },
     {
       "name": "projects",
       "title": "Project Notes",
       "subtitle": "hyperDASH",
       "description": "List Projects (Bases-compatible)",
-      "mode": "view",
-      "icon": "assets/icon.png"
+      "mode": "view"
     }
   ],
   "dependencies": {
