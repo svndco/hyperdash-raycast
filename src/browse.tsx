@@ -1,13 +1,16 @@
 import { Action, ActionPanel, Color, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, scanProjects, createProjectNote, createTodoNote } from "./utils";
-import { readBasesTag } from "./bases";
+import { readBaseConfig, evaluateWithView, type BaseConfig } from "./bases";
+import path from "path";
 
 type Prefs = {
-  vaultPath: string;
-  projectPath: string;
   basesTodoFile: string;
+  todoViewName?: string;
+  todoScanPath?: string;
   basesProjectFile: string;
+  projectViewName?: string;
+  projectScanPath?: string;
   showRecurrence?: boolean;
   showPriority?: boolean;
   showTimeTracking?: boolean;
@@ -77,80 +80,124 @@ export default function Command() {
   const [searchText, setSearchText] = useState<string>("");
   const [effectiveTodo, setEffectiveTodo] = useState<string>("");
   const [effectiveProject, setEffectiveProject] = useState<string>("");
+  const [loadingRef, setLoadingRef] = useState(false);
 
-  async function load() {
+  async function load(rebuildCache = false) {
+    // Prevent duplicate simultaneous loads (React 18 strict mode calls useEffect twice)
+    if (loadingRef) return;
+    setLoadingRef(true);
+
     try {
       setIsLoading(true);
 
       // Validate required fields
-      if (!prefs.vaultPath?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Vault Path in Preferences" });
-        setNotes([]);
-        return;
-      }
-
       if (!prefs.basesTodoFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Bases HyperDASH File in Preferences" });
+        await showToast({ style: Toast.Style.Failure, title: "Set Todo Base File in Preferences" });
         setNotes([]);
         return;
       }
 
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Bases Project File in Preferences" });
+        await showToast({ style: Toast.Style.Failure, title: "Set Project Base File in Preferences" });
         setNotes([]);
         return;
       }
 
-      // Read tags from Bases files
-      const [todoFromBases, projectFromBases] = await Promise.all([
-        readBasesTag(prefs.basesTodoFile.trim()),
-        readBasesTag(prefs.basesProjectFile.trim())
+      // Read configurations from Base files
+      const [todoConfig, projectConfig] = await Promise.all([
+        readBaseConfig(prefs.basesTodoFile.trim()),
+        readBaseConfig(prefs.basesProjectFile.trim())
       ]);
 
-      // Validate that Bases files contain tags
-      if (!todoFromBases) {
+      // Validate that Base files were parsed successfully
+      if (!todoConfig) {
         await showToast({
           style: Toast.Style.Failure,
-          title: "No tags found in HyperDASH file",
-          message: "Check that your hyperdash.base file contains tags.containsAny() or tags.contains()"
+          title: "Failed to parse Todo Base file",
+          message: "Check that your base file is valid YAML"
         });
         setNotes([]);
         return;
       }
 
-      if (!projectFromBases) {
+      if (!projectConfig) {
         await showToast({
           style: Toast.Style.Failure,
-          title: "No tags found in Project file",
-          message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+          title: "Failed to parse Project Base file",
+          message: "Check that your base file is valid YAML"
         });
         setNotes([]);
         return;
       }
 
-      // Support comma-separated tags
-      const todoTags = todoFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-      const projectTags = projectFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+      // Validate that vault paths were found
+      if (!todoConfig.vaultPath) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Could not find vault for Todo Base file",
+          message: "Make sure your .base file is inside an Obsidian vault with .obsidian folder"
+        });
+        setNotes([]);
+        return;
+      }
 
-      setEffectiveTodo(todoTags.join(', '));
-      setEffectiveProject(projectTags.join(', '));
+      if (!projectConfig.vaultPath) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Could not find vault for Project Base file",
+          message: "Make sure your .base file is inside an Obsidian vault with .obsidian folder"
+        });
+        setNotes([]);
+        return;
+      }
 
+      // Display effective filter info
+      const todoTagFilters = todoConfig.filters.filter(f => f.property === "tags");
+      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
+
+      setEffectiveTodo(todoTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
+      setEffectiveProject(projectTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
+
+      // Scan the vault with inline filtering
+      const todoViewName = prefs.todoViewName?.trim() || undefined;
+      const projectViewName = prefs.projectViewName?.trim() || undefined;
+
+      const filterFn = (note: any) => {
+        // Apply filters during scan to avoid loading all files into memory
+        const matchesTodo = evaluateWithView(todoConfig, note, todoViewName);
+        const matchesProject = evaluateWithView(projectConfig, note, projectViewName);
+
+        // Only keep notes that match either filter
+        if (!matchesTodo && !matchesProject) return null;
+
+        return {
+          ...note,
+          hasTodoTag: matchesTodo,
+          hasProjectTag: matchesProject
+        };
+      };
+
+      // Scan vault and show results with toast
       const scanned = await scanVault({
-        vaultPath: prefs.vaultPath.trim(),
-        todoTags,
-        projectTags
+        vaultPath: todoConfig.vaultPath,
+        todoTags: [],
+        projectTags: [],
+        useCache: false,
+        filterFn
       });
 
       setNotes(scanned);
+      setIsLoading(false);
+      setLoadingRef(false);
     } catch (e: any) {
       await showToast({ style: Toast.Style.Failure, title: "Failed to load", message: String(e?.message ?? e) });
-    } finally {
       setIsLoading(false);
+      setLoadingRef(false);
     }
   }
 
   useEffect(() => {
-    load();
+    load().catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -158,33 +205,38 @@ export default function Command() {
     if (!searchText.trim()) return;
 
     try {
-      if (!prefs.vaultPath?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Vault path not set" });
-        return;
-      }
-
       if (!prefs.basesTodoFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Bases HyperDASH file not set" });
+        await showToast({ style: Toast.Style.Failure, title: "Todo Base file not set" });
         return;
       }
 
-      // Get todo tag from bases file
-      const todoFromBases = await readBasesTag(prefs.basesTodoFile.trim());
+      // Get todo config from base file
+      const todoConfig = await readBaseConfig(prefs.basesTodoFile.trim());
 
-      if (!todoFromBases) {
+      if (!todoConfig || !todoConfig.vaultPath) {
         await showToast({
           style: Toast.Style.Failure,
-          title: "No tags found in HyperDASH file",
-          message: "Check that your hyperdash.base file contains tags.containsAny() or tags.contains()"
+          title: "Failed to parse Todo Base file",
+          message: "Check that your base file is valid and in an Obsidian vault"
         });
         return;
       }
 
-      const todoTags = todoFromBases.split(',').map(t => t.trim()).filter(Boolean);
-      const todoTag = todoTags[0];
+      // Extract first tag from tag filters
+      const todoTagFilters = todoConfig.filters.filter(f => f.property === "tags");
+      if (todoTagFilters.length === 0 || todoTagFilters[0].values.length === 0) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in Todo Base file",
+          message: "Base file must contain at least one tag filter"
+        });
+        return;
+      }
+
+      const todoTag = todoTagFilters[0].values[0];
 
       // Create new todo note (no dates - set later via actions)
-      await createTodoNote(prefs.vaultPath.trim(), searchText.trim(), todoTag);
+      await createTodoNote(todoConfig.vaultPath, searchText.trim(), todoTag);
 
       await showToast({
         style: Toast.Style.Success,
@@ -252,10 +304,14 @@ export default function Command() {
     return !todos.some(todo => todo.title.toLowerCase() === searchLower);
   }, [searchText, todos]);
 
+  const searchPlaceholder = notes.length > 0
+    ? `Search ${notes.length} notes by title…`
+    : "Search notes by title…";
+
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder="Search notes by title…"
+      searchBarPlaceholder={searchPlaceholder}
       onSearchTextChange={setSearchText}
       searchText={searchText}
     >
@@ -279,42 +335,42 @@ export default function Command() {
       {inProgress.length > 0 && (
         <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
           {inProgress.map((n) => (
-            <NoteItem key={`inprogress-${n.path}`} note={n} onRefresh={load} />
+            <NoteItem key={`inprogress-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {upNext.length > 0 && (
         <List.Section title={`Up Next (${upNext.length})`} subtitle="status: next">
           {upNext.map((n) => (
-            <NoteItem key={`upnext-${n.path}`} note={n} onRefresh={load} />
+            <NoteItem key={`upnext-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {todoItems.length > 0 && (
         <List.Section title={`Todo (${todoItems.length})`} subtitle="status: todo">
           {todoItems.map((n) => (
-            <NoteItem key={`todo-${n.path}`} note={n} onRefresh={load} />
+            <NoteItem key={`todo-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {holdStuck.length > 0 && (
         <List.Section title={`Hold/Stuck (${holdStuck.length})`} subtitle="status: hold/stuck">
           {holdStuck.map((n) => (
-            <NoteItem key={`hold-${n.path}`} note={n} onRefresh={load} />
+            <NoteItem key={`hold-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {waiting.length > 0 && (
         <List.Section title={`Waiting (${waiting.length})`} subtitle="status: waiting">
           {waiting.map((n) => (
-            <NoteItem key={`waiting-${n.path}`} note={n} onRefresh={load} />
+            <NoteItem key={`waiting-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {someday.length > 0 && (
         <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
           {someday.map((n) => (
-            <NoteItem key={`someday-${n.path}`} note={n} onRefresh={load} />
+            <NoteItem key={`someday-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
@@ -385,33 +441,28 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   useEffect(() => {
     async function loadProjects() {
       try {
-        if (!prefs.projectPath?.trim()) {
-          await showToast({ style: Toast.Style.Failure, title: "Project path not set" });
-          return;
-        }
-
-        const scanPath = prefs.projectPath.trim();
-
         if (!prefs.basesProjectFile?.trim()) {
-          await showToast({ style: Toast.Style.Failure, title: "Bases Project file not set" });
+          await showToast({ style: Toast.Style.Failure, title: "Project Base file not set" });
           return;
         }
 
-        // Get project tags from bases file
-        const projectFromBases = await readBasesTag(prefs.basesProjectFile.trim());
+        // Get project config from base file
+        const projectConfig = await readBaseConfig(prefs.basesProjectFile.trim());
 
-        if (!projectFromBases) {
+        if (!projectConfig || !projectConfig.vaultPath) {
           await showToast({
             style: Toast.Style.Failure,
-            title: "No tags found in Project file",
-            message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+            title: "Failed to parse Project Base file",
+            message: "Check that your base file is valid and in an Obsidian vault"
           });
           return;
         }
 
-        const projectTags = projectFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+        // Extract tags from project filters (for backwards compatibility with scanProjects)
+        const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
+        const projectTags = projectTagFilters.flatMap(f => f.values.map(v => v.toLowerCase()));
 
-        const projectList = await scanProjects(scanPath, projectTags);
+        const projectList = await scanProjects(projectConfig.vaultPath, projectTags);
         setProjects(projectList);
       } catch (error: any) {
         await showToast({ style: Toast.Style.Failure, title: "Failed to load projects", message: error.message });
@@ -455,35 +506,38 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
     if (!searchText.trim()) return;
 
     try {
-      if (!prefs.projectPath?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Project path not set" });
-        return;
-      }
-
-      const createPath = prefs.projectPath.trim();
-
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Bases Project file not set" });
+        await showToast({ style: Toast.Style.Failure, title: "Project Base file not set" });
         return;
       }
 
-      // Get project tag from bases file
-      const projectFromBases = await readBasesTag(prefs.basesProjectFile.trim());
+      // Get project config from base file
+      const projectConfig = await readBaseConfig(prefs.basesProjectFile.trim());
 
-      if (!projectFromBases) {
+      if (!projectConfig || !projectConfig.vaultPath) {
         await showToast({
           style: Toast.Style.Failure,
-          title: "No tags found in Project file",
-          message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+          title: "Failed to parse Project Base file",
+          message: "Check that your base file is valid and in an Obsidian vault"
         });
         return;
       }
 
-      const projectTags = projectFromBases.split(',').map(t => t.trim()).filter(Boolean);
-      const projectTag = projectTags[0];
+      // Extract first tag from tag filters
+      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
+      if (projectTagFilters.length === 0 || projectTagFilters[0].values.length === 0) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in Project Base file",
+          message: "Base file must contain at least one tag filter"
+        });
+        return;
+      }
+
+      const projectTag = projectTagFilters[0].values[0];
 
       // Create new project note (no dates - set later via actions)
-      await createProjectNote(createPath, searchText.trim(), projectTag);
+      await createProjectNote(projectConfig.vaultPath, searchText.trim(), projectTag);
 
       // Set it on the todo
       await updateNoteProject(note.path, searchText.trim());
@@ -580,7 +634,7 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   );
 }
 
-function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
+function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () => void; onRebuild: () => void }) {
   const prefs = getPreferenceValues<Prefs>();
   const accessories = [];
 
@@ -699,6 +753,15 @@ function NoteItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
           <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
+          <Action
+            title="Rebuild Cache"
+            icon={Icon.ArrowClockwise}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
+            onAction={async () => {
+              await showToast({ style: Toast.Style.Animated, title: "Rebuilding cache..." });
+              await onRebuild();
+            }}
+          />
         </ActionPanel>
       }
     />

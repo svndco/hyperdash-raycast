@@ -2,9 +2,27 @@ import fs from "fs/promises";
 import path from "path";
 import fg from "fast-glob";
 import matter from "gray-matter";
+import os from "os";
 
 const TAG_INLINE = /(^|\\s)#([A-Za-z0-9/_-]+)/g;
 const H1_REGEX = /^#\\s+(.+?)\\s*$/m;
+
+
+type CachedNote = {
+  path: string;
+  relativePath: string;
+  title: string;
+  tags: string[];
+  frontmatter: Record<string, any>;
+  mtimeMs: number;
+};
+
+type VaultCache = {
+  version: number;
+  vaultPath: string;
+  createdAt: string;
+  notes: CachedNote[];
+};
 
 export type Note = {
   title: string;
@@ -48,30 +66,174 @@ function extractTitle(content: string, fmTitle: unknown, fallback: string) {
   return h1 ? h1.trim() : fallback;
 }
 
-export async function scanVault(opts: { vaultPath: string; todoTags: string[]; projectTags: string[] }): Promise<Note[]> {
-  const { vaultPath, todoTags, projectTags } = opts;
+/**
+ * Get the cache file path for a vault
+ */
+function getCachePath(vaultPath: string): string {
+  return path.join(vaultPath, ".hyperdash", "cache.json");
+}
+
+/**
+ * Read cache from disk if it exists
+ */
+export async function readCache(vaultPath: string): Promise<VaultCache | null> {
+  try {
+    const cachePath = getCachePath(vaultPath);
+    const raw = await fs.readFile(cachePath, "utf8");
+    const cache = JSON.parse(raw) as VaultCache;
+
+    // Validate cache version
+    if (cache.version !== 1) return null;
+    if (cache.vaultPath !== vaultPath) return null;
+
+    return cache;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write cache to disk
+ */
+export async function writeCache(vaultPath: string, notes: CachedNote[]): Promise<void> {
+  try {
+    const cachePath = getCachePath(vaultPath);
+    const cacheDir = path.dirname(cachePath);
+
+    // Ensure cache directory exists
+    await fs.mkdir(cacheDir, { recursive: true });
+
+    const cache: VaultCache = {
+      version: 1,
+      vaultPath,
+      createdAt: new Date().toISOString(),
+      notes
+    };
+
+    await fs.writeFile(cachePath, JSON.stringify(cache, null, 2), "utf8");
+  } catch (error) {
+    // Silently fail - caching is optional
+    console.error("Failed to write cache:", error);
+  }
+}
+
+/**
+ * Convert cached note to Note type with filters applied
+ */
+function cachedNoteToNote(cached: CachedNote): Note {
+  const fm = cached.frontmatter;
+
+  return {
+    title: cached.title,
+    path: cached.path,
+    relativePath: cached.relativePath,
+    tags: cached.tags,
+    mtimeMs: cached.mtimeMs,
+    hasTodoTag: false, // Will be set by caller
+    hasProjectTag: false, // Will be set by caller
+    status: typeof fm.status === "string" ? fm.status.trim().toLowerCase() :
+            typeof fm.Status === "string" ? fm.Status.trim().toLowerCase() : undefined,
+    project: typeof fm.project === "string" ? fm.project.trim().replace(/^\[\[|\]\]$/g, "") :
+             typeof fm.Project === "string" ? fm.Project.trim().replace(/^\[\[|\]\]$/g, "") : undefined,
+    dateDue: typeof fm.date_due === "string" ? fm.date_due.trim() :
+             typeof fm.dateDue === "string" ? fm.dateDue.trim() :
+             typeof fm.due_date === "string" ? fm.due_date.trim() :
+             typeof fm.due === "string" ? fm.due.trim() : undefined,
+    dateStarted: typeof fm.date_started === "string" ? fm.date_started.trim() :
+                 typeof fm.dateStarted === "string" ? fm.dateStarted.trim() :
+                 typeof fm.start_date === "string" ? fm.start_date.trim() :
+                 typeof fm.started === "string" ? fm.started.trim() : undefined,
+    dateScheduled: typeof fm.date_scheduled === "string" ? fm.date_scheduled.trim() :
+                   typeof fm.dateScheduled === "string" ? fm.dateScheduled.trim() :
+                   typeof fm.scheduled === "string" ? fm.scheduled.trim() : undefined,
+    recurrence: typeof fm.recurrence === "string" ? fm.recurrence.trim() : undefined,
+    recurrenceAnchor: typeof fm.recurrence_anchor === "string" ? fm.recurrence_anchor.trim() :
+                      typeof fm.recurrenceAnchor === "string" ? fm.recurrenceAnchor.trim() : undefined,
+    priority: typeof fm.priority === "string" ? fm.priority.trim() :
+              typeof fm.Priority === "string" ? fm.Priority.trim() : undefined,
+    timeTracked: typeof fm.time_tracked === "number" ? fm.time_tracked :
+                 typeof fm.timeTracked === "number" ? fm.timeTracked : undefined,
+    timeEstimate: typeof fm.time_estimate === "number" ? fm.time_estimate :
+                  typeof fm.timeEstimate === "number" ? fm.timeEstimate : undefined
+  };
+}
+
+export async function scanVault(opts: {
+  vaultPath: string;
+  todoTags: string[];
+  projectTags: string[];
+  filterFn?: (note: Note) => Note | null;
+  useCache?: boolean;
+}): Promise<Note[]> {
+  const { vaultPath, todoTags, projectTags, filterFn, useCache = true } = opts;
+
+  // Try to load from cache first
+  if (useCache) {
+    const cache = await readCache(vaultPath);
+    if (cache) {
+      // Convert cached notes to Note objects and apply filter
+      const notes: Note[] = [];
+      for (const cachedNote of cache.notes) {
+        const note = cachedNoteToNote(cachedNote);
+        if (filterFn) {
+          const filtered = filterFn(note);
+          if (filtered !== null) {
+            notes.push(filtered);
+          }
+        } else {
+          notes.push(note);
+        }
+      }
+      return notes;
+    }
+  }
+
+  // Cache miss or disabled - scan vault
   const entries = await fg(["**/*.md", "**/*.markdown"], {
     cwd: vaultPath,
-    ignore: ["**/.obsidian/**", "**/.git/**", "**/node_modules/**", "**/log/**", "**/archive/**"],
+    ignore: [
+      "**/.obsidian/**",
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/log/**",
+      "**/Clippings/**",
+      "**/files/**",
+      "**/.trash/**"
+    ],
     onlyFiles: true,
     unique: true,
     followSymbolicLinks: false
   });
 
-  // Limit to first 5000 files to prevent memory issues
-  const limitedEntries = entries.slice(0, 5000);
-
   const notes: Note[] = [];
-  await Promise.all(
-    limitedEntries.map(async (rel) => {
-      const abs = path.join(vaultPath, rel);
-      try {
-        const [raw, st] = await Promise.all([fs.readFile(abs, "utf8"), fs.stat(abs)]);
-        const parsed = matter(raw);
-        const fmTags = normalizeTags((parsed.data as any)?.tags);
-        const inlineTags = extractInlineTags(parsed.content);
-        const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
-        const title = extractTitle(parsed.content, (parsed.data as any)?.title, path.parse(rel).name);
+  const cachedNotes: CachedNote[] = []; // For building cache
+
+  // Process files in batches to balance speed and memory usage
+  const BATCH_SIZE = 100;
+  const limitedEntries = entries; // Process all files for cache
+
+  for (let i = 0; i < limitedEntries.length; i += BATCH_SIZE) {
+    const batch = limitedEntries.slice(i, i + BATCH_SIZE);
+    const batchNotes = await Promise.all(
+      batch.map(async (rel) => {
+        const abs = path.join(vaultPath, rel);
+        try {
+          const [raw, st] = await Promise.all([fs.readFile(abs, "utf8"), fs.stat(abs)]);
+          const parsed = matter(raw);
+          const fmTags = normalizeTags((parsed.data as any)?.tags);
+          const inlineTags = extractInlineTags(parsed.content);
+          const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+          const title = extractTitle(parsed.content, (parsed.data as any)?.title, path.parse(rel).name);
+
+          // Store in cache (all frontmatter)
+          cachedNotes.push({
+            path: abs,
+            relativePath: rel,
+            title,
+            tags,
+            frontmatter: parsed.data || {},
+            mtimeMs: st.mtimeMs
+          });
 
         // Extract status and project from frontmatter
         const rawStatus = (parsed.data as any)?.status || (parsed.data as any)?.Status;
@@ -112,36 +274,54 @@ export async function scanVault(opts: { vaultPath: string; todoTags: string[]; p
         const hasTodoTag = todoTags.some(todoTag => tags.includes(todoTag));
         const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
 
-        // Filter out done and canceled todos (but not projects)
-        const isDoneOrCanceled = status === "done" || status === "canceled" || status === "cancelled";
-        if (isDoneOrCanceled && hasTodoTag && !hasProjectTag) {
-          return; // Skip this todo note
-        }
+          // NOTE: With dynamic filtering from base files, we no longer filter out
+          // done/canceled todos here. The base file filters control what gets shown.
+          // This allows users to configure their own filtering logic in the base files.
 
-        notes.push({
-          title,
-          path: abs,
-          relativePath: rel,
-          tags,
-          mtimeMs: st.mtimeMs,
-          hasTodoTag,
-          hasProjectTag,
-          status,
-          project,
-          dateDue,
-          dateStarted,
-          dateScheduled,
-          recurrence,
-          recurrenceAnchor,
-          priority,
-          timeTracked,
-          timeEstimate
-        });
-      } catch {
-        // ignore unreadable file
+          return {
+            title,
+            path: abs,
+            relativePath: rel,
+            tags,
+            mtimeMs: st.mtimeMs,
+            hasTodoTag,
+            hasProjectTag,
+            status,
+            project,
+            dateDue,
+            dateStarted,
+            dateScheduled,
+            recurrence,
+            recurrenceAnchor,
+            priority,
+            timeTracked,
+            timeEstimate
+          };
+        } catch {
+          // ignore unreadable file
+          return null;
+        }
+      })
+    );
+
+    // Filter out nulls and apply custom filter if provided
+    for (const note of batchNotes) {
+      if (note !== null) {
+        if (filterFn) {
+          const filtered = filterFn(note);
+          if (filtered !== null) {
+            notes.push(filtered);
+          }
+        } else {
+          notes.push(note);
+        }
       }
-    })
-  );
+    }
+  }
+
+  // Write cache for future use
+  await writeCache(vaultPath, cachedNotes);
+
   return notes;
 }
 
