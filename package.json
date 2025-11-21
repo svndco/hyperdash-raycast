@@ -2,8 +2,8 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "hyperdash",
   "title": "Hyperdash",
-  "version": "1.0.7",
-  "description": "v1.0.7 - Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
+  "version": "1.0.8",
+  "description": "v1.0.8 - Manage Obsidian projects and tasks with TaskNotes 4.0.1 compatibility. Tag-based filtering, smart sorting, recurrence patterns, and time tracking.",
   "icon": "icon.png",
   "author": "jeremyallen",
   "license": "MIT",
@@ -24,36 +24,52 @@
   ],
   "preferences": [
     {
-      "name": "vaultPath",
-      "type": "textfield",
-      "required": true,
-      "title": "Task Notes Path",
-      "description": "Path to scan for todos (e.g., /path/to/vault/todos for better performance)",
-      "placeholder": "/path/to/obsidian/vault/todos"
-    },
-    {
-      "name": "projectPath",
-      "type": "textfield",
-      "required": true,
-      "title": "Project Path",
-      "description": "Path to scan for projects. Set to full vault root for all projects.",
-      "placeholder": "/path/to/obsidian/vault"
-    },
-    {
       "name": "basesTodoFile",
       "type": "textfield",
       "required": true,
-      "title": "Todo Base Path",
-      "description": "Path to your Bases .base file containing todo tag definitions",
-      "placeholder": "/path/to/obsidian/vault/bases/hyperdash.base"
+      "title": "Todo Base File",
+      "description": "Path to your .base file for todos (vault auto-detected, cache used for speed)",
+      "placeholder": "/path/to/obsidian/vault/base/hyperdash.base"
+    },
+    {
+      "name": "todoViewName",
+      "type": "textfield",
+      "required": false,
+      "title": "Todo View Name",
+      "description": "Optional: Name of the view to use from your todo base file (e.g., 'Todo', 'Done')",
+      "placeholder": "Todo"
+    },
+    {
+      "name": "todoScanPath",
+      "type": "textfield",
+      "required": false,
+      "title": "Todo Scan Path (Performance)",
+      "description": "Optional: Specific folder to scan for faster loading (e.g., 'tc/todo'). Leave empty to scan entire vault.",
+      "placeholder": "tc/todo"
     },
     {
       "name": "basesProjectFile",
       "type": "textfield",
       "required": true,
-      "title": "Project Base Path",
-      "description": "Path to your Bases .base file containing project tag definitions",
-      "placeholder": "/path/to/obsidian/vault/bases/hyperpro.base"
+      "title": "Project Base File",
+      "description": "Path to your .base file for projects (vault auto-detected, cache used for speed)",
+      "placeholder": "/path/to/obsidian/vault/base/hyperpro.base"
+    },
+    {
+      "name": "projectViewName",
+      "type": "textfield",
+      "required": false,
+      "title": "Project View Name",
+      "description": "Optional: Name of the view to use from your project base file (e.g., 'Current', 'ALL')",
+      "placeholder": "ALL"
+    },
+    {
+      "name": "projectScanPath",
+      "type": "textfield",
+      "required": false,
+      "title": "Project Scan Path (Performance)",
+      "description": "Optional: Specific folder to scan for faster loading (e.g., 'project'). Leave empty to scan entire vault.",
+      "placeholder": "project"
     },
     {
       "name": "showRecurrence",

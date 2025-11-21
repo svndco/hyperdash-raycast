@@ -1,11 +1,13 @@
 import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate } from "./utils";
-import { readBasesTag } from "./bases";
+import { readBaseConfig, evaluateWithView } from "./bases";
+import path from "path";
 
 type Prefs = {
-  projectPath: string;
   basesProjectFile: string;
+  projectViewName?: string;
+  projectScanPath?: string;
 };
 
 function formatDate(dateStr: string): string {
@@ -69,48 +71,72 @@ export default function Command() {
   const [searchText, setSearchText] = useState<string>("");
   const [effectiveProject, setEffectiveProject] = useState<string>("");
 
-  async function load() {
+  async function load(rebuildCache = false) {
     try {
       setIsLoading(true);
 
-      if (!prefs.projectPath?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Project Path in Preferences" });
-        setNotes([]);
-        return;
-      }
-
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Bases Project File in Preferences" });
+        await showToast({ style: Toast.Style.Failure, title: "Set Project Base File in Preferences" });
         setNotes([]);
         return;
       }
 
-      const projectFromBases = await readBasesTag(prefs.basesProjectFile.trim());
+      // Read configuration from Project Base file
+      const projectConfig = await readBaseConfig(prefs.basesProjectFile.trim());
 
-      if (!projectFromBases) {
+      if (!projectConfig) {
         await showToast({
           style: Toast.Style.Failure,
-          title: "No tags found in Project file",
-          message: "Check that your project.base file contains tags.containsAny() or tags.contains()"
+          title: "Failed to parse Project Base file",
+          message: "Check that your base file is valid YAML"
         });
         setNotes([]);
         return;
       }
 
-      const projectTags = projectFromBases.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+      if (!projectConfig.vaultPath) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Could not find vault for Project Base file",
+          message: "Make sure your .base file is inside an Obsidian vault with .obsidian folder"
+        });
+        setNotes([]);
+        return;
+      }
 
-      setEffectiveProject(projectTags.join(', '));
+      // Display effective filter info
+      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
+      setEffectiveProject(projectTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
 
+      // Scan the vault with inline filtering
+      const projectViewName = prefs.projectViewName?.trim() || undefined;
+
+      const filterFn = (note: any) => {
+        // Apply filters during scan to avoid loading all files into memory
+        const matchesProject = evaluateWithView(projectConfig, note, projectViewName);
+
+        if (!matchesProject) return null;
+
+        return {
+          ...note,
+          hasTodoTag: false,
+          hasProjectTag: matchesProject
+        };
+      };
+
+      // Scan vault and show results with toast
       const scanned = await scanVault({
-        vaultPath: prefs.projectPath.trim(),
-        todoTags: [], // Empty array to not match any todos
-        projectTags
+        vaultPath: projectConfig.vaultPath,
+        todoTags: [],
+        projectTags: [],
+        useCache: false,
+        filterFn
       });
 
       setNotes(scanned);
+      setIsLoading(false);
     } catch (e: any) {
       await showToast({ style: Toast.Style.Failure, title: "Failed to load", message: String(e?.message ?? e) });
-    } finally {
       setIsLoading(false);
     }
   }
@@ -137,59 +163,63 @@ export default function Command() {
   const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
   const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
 
+  const searchPlaceholder = filteredProjects.length > 0
+    ? `Search ${filteredProjects.length} projects by title…`
+    : "Search projects by title…";
+
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder="Search projects by title…"
+      searchBarPlaceholder={searchPlaceholder}
       onSearchTextChange={setSearchText}
       searchText={searchText}
     >
       {planning.length > 0 && (
         <List.Section title={`Planning (${planning.length})`} subtitle="status: planning">
           {planning.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {research.length > 0 && (
         <List.Section title={`Research (${research.length})`} subtitle="status: research">
           {research.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {upNext.length > 0 && (
         <List.Section title={`Up Next (${upNext.length})`} subtitle="status: up-next">
           {upNext.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {inProgress.length > 0 && (
         <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
           {inProgress.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {onHold.length > 0 && (
         <List.Section title={`On Hold (${onHold.length})`} subtitle="status: on-hold">
           {onHold.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {someday.length > 0 && (
         <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
           {someday.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {other.length > 0 && (
         <List.Section title={`Other (${other.length})`}>
           {other.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={load} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
@@ -250,7 +280,7 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
   );
 }
 
-function ProjectItem({ note, onRefresh }: { note: Note; onRefresh: () => void }) {
+function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () => void; onRebuild: () => void }) {
   const accessories = [];
   if (note.dateDue) {
     const overdue = isOverdue(note.dateDue);
@@ -331,6 +361,15 @@ function ProjectItem({ note, onRefresh }: { note: Note; onRefresh: () => void })
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
           <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
+          <Action
+            title="Rebuild Cache"
+            icon={Icon.ArrowClockwise}
+            shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
+            onAction={async () => {
+              await showToast({ style: Toast.Style.Animated, title: "Rebuilding cache..." });
+              await onRebuild();
+            }}
+          />
         </ActionPanel>
       }
     />
