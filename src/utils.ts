@@ -575,7 +575,7 @@ export async function createProjectNote(
   dateStarted?: Date,
   dateDue?: Date,
   cachedNotes?: Note[]
-): Promise<void> {
+): Promise<string> {
   // Detect the best folder for this project based on existing notes with same tags
   const folder = await detectFolderForTags(vaultPath, projectTags, cachedNotes);
   const fileName = `${projectName}.md`;
@@ -586,8 +586,8 @@ export async function createProjectNote(
   // Check if file already exists
   try {
     await fs.access(filePath);
-    // File exists, don't create
-    return;
+    // File exists, return path
+    return filePath;
   } catch {
     // File doesn't exist, create it
     const now = new Date().toISOString();
@@ -631,6 +631,7 @@ dateModified: ${now}`;
     }
 
     await fs.writeFile(filePath, frontmatter, "utf8");
+    return filePath;
   }
 }
 

@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate } from "./utils";
+import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, createProjectNote } from "./utils";
 import { readBaseConfig, evaluateWithView } from "./bases";
 import { clearVaultCache } from "./cache";
 import path from "path";
@@ -162,6 +162,90 @@ export default function Command() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function handleCreateProject() {
+    try {
+      if (!prefs.basesProjectFile?.trim()) {
+        await showToast({ style: Toast.Style.Failure, title: "Set Project Base File in Preferences" });
+        return;
+      }
+
+      // Read configuration from Project Base file
+      const projectConfig = await readBaseConfig(prefs.basesProjectFile.trim());
+
+      if (!projectConfig) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to parse Project Base file",
+          message: "Check that your base file is valid YAML"
+        });
+        return;
+      }
+
+      if (!projectConfig.vaultPath) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Could not find vault for Project Base file",
+          message: "Base file must be inside an Obsidian vault"
+        });
+        return;
+      }
+
+      // Extract all tags from tag filters
+      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
+      if (projectTagFilters.length === 0 || projectTagFilters[0].values.length === 0) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No tags found in Project Base file",
+          message: "Base file must contain at least one tag filter"
+        });
+        return;
+      }
+
+      const projectTags = projectTagFilters.flatMap(f => f.values);
+
+      // Create new project note (pass cached notes for fast folder detection)
+      const newNotePath = await createProjectNote(projectConfig.vaultPath, searchText.trim(), projectTags, undefined, undefined, notes);
+
+      // Create a Note object for the new project to add to state immediately
+      const newNote: Note = {
+        title: searchText.trim(),
+        path: newNotePath,
+        relativePath: newNotePath.replace(projectConfig.vaultPath + '/', ''),
+        tags: projectTags.map(t => t.toLowerCase()),
+        mtimeMs: Date.now(),
+        hasTodoTag: false,
+        hasProjectTag: true,
+        status: 'planning',
+        project: undefined,
+        dateDue: undefined,
+        dateStarted: undefined,
+        dateScheduled: undefined,
+        recurrence: undefined,
+        recurrenceAnchor: undefined,
+        priority: undefined,
+        timeTracked: 0,
+        timeEstimate: 0
+      };
+
+      // Add the new note to the current notes state immediately
+      setNotes([...notes, newNote]);
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Project Created",
+        message: searchText.trim()
+      });
+
+      // Clear search
+      setSearchText("");
+
+      // Clear cache in background so next reload gets fresh data
+      clearVaultCache(projectConfig.vaultPath);
+    } catch (error: any) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed to create project", message: error.message });
+    }
+  }
+
   // Filter projects by search text
   const filteredProjects = useMemo(() => {
     const projects = notes.filter((n) => n.hasProjectTag);
@@ -179,6 +263,14 @@ export default function Command() {
   const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
   const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
 
+  // Check if search text exactly matches any existing project
+  const projects = useMemo(() => notes.filter((n) => n.hasProjectTag), [notes]);
+  const showCreateOption = useMemo(() => {
+    if (!searchText.trim()) return false;
+    const searchLower = searchText.trim().toLowerCase();
+    return !projects.some(project => project.title.toLowerCase() === searchLower);
+  }, [searchText, projects]);
+
   return (
     <List
       isLoading={isLoading}
@@ -186,6 +278,23 @@ export default function Command() {
       onSearchTextChange={setSearchText}
       searchText={searchText}
     >
+      {showCreateOption && (
+        <List.Section title="Create New">
+          <List.Item
+            title={`Create New Project: "${searchText.trim()}"`}
+            icon={Icon.Plus}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Create Project"
+                  icon={Icon.Plus}
+                  onAction={handleCreateProject}
+                />
+              </ActionPanel>
+            }
+          />
+        </List.Section>
+      )}
       {planning.length > 0 && (
         <List.Section title={`Planning (${planning.length})`} subtitle="status: planning">
           {planning.map((n) => (

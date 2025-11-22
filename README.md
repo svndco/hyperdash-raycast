@@ -5,7 +5,7 @@
 
   **A Raycast extension for managing Obsidian Projects and Tasks**
 
-  ![Version](https://img.shields.io/badge/version-1.0.11-green)
+  ![Version](https://img.shields.io/badge/version-1.0.12-green)
   ![License](https://img.shields.io/badge/license-MIT-blue)
   ![TaskNotes](https://img.shields.io/badge/TaskNotes-4.0.1-orange)
 </div>
@@ -51,7 +51,7 @@ Point Hyperdash at your base files:
 Toggle what you see:
 - **Recurrence info**: Show when tasks repeat (on by default)
 - **Priority**: Show task priority (on by default)
-- **Time tracking**: Show tracked time and estimates (off by default)
+- **Time tracking**: Show tracked time and estimates (on by default)
 
 ### Performance Tuning
 
@@ -131,10 +131,7 @@ All your projects in one place
 
 ## If Things Are Slow
 
-Got a massive vault?
-1. Drop "Maximum Results" to 200-300
-2. Point at a specific folder instead of your whole vault
-3. Turn off time tracking display if you don't use it
+Got a massive vault? Drop "Maximum Results" to 200-300.
 
 ## Upgrading from Earlier Versions
 
