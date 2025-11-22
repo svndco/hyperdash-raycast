@@ -1,45 +1,46 @@
 # Hyperdash Setup Guide
 
-Quick setup instructions for getting started with Hyperdash in Raycast.
+Getting started with Hyperdash in Raycast.
 
-## Requirements
+## What you'll need
 
-- **Obsidian vault** with a `.obsidian` folder
-- **Base files** (`.base` format) for filtering todos and projects
-- **Markdown notes** with YAML frontmatter
+- An Obsidian vault (just needs a `.obsidian` folder)
+- Base files (`.base` format) for filtering your todos and projects
+- Markdown notes with YAML frontmatter
 
-**Note:** Hyperdash works with or without the TaskNotes plugin. You just need properly formatted markdown notes.
+Hyperdash works with or without the TaskNotes plugin - just use markdown notes with frontmatter!
 
-## Quick Start
+## Getting Started
 
-### 1. Install the Extension
+### Install the Extension
 
-Import the extension into Raycast from the `dist` folder or install from the Raycast Store.
+Grab it from the Raycast Store, or import from the `dist` folder if you're running from source.
 
-### 2. Create Base Files
+### Create Your Base Files
 
-Base files define filters and views for your todos and projects. See [examples/bases/](examples/bases/) for working examples:
+Base files tell Hyperdash what to look for. Check out [examples/bases/](examples/bases/) for working examples.
 
-- `hyperdash.base` - Todo filters (tag: `#todo`)
-- `hyperpro.base` - Project filters (tag: `#project`)
+You'll want two base files:
+- One for todos (could be `hyperdash.base` like mine, or `todo.base`, or `tasks.base` - whatever feels right)
+- One for projects (maybe `hyperpro.base`, or `projects.base`, you do you)
 
-Place these `.base` files somewhere in your Obsidian vault.
+Just drop these `.base` files anywhere in your vault.
 
-### 3. Configure Preferences
+### Point Raycast at Your Files
 
-In Raycast, set these preferences:
+Open Raycast preferences and set:
 
-- **Todo Base File**: Path to your `hyperdash.base` file
-- **Project Base File**: Path to your `hyperpro.base` file
-- **Todo View Name** (optional): Filter view name (e.g., "Todo", "Done")
-- **Project View Name** (optional): Filter view name (e.g., "Current", "ALL")
+- **Todo Base File**: Path to whichever base file you made for todos
+- **Project Base File**: Path to your projects base file
+- **Todo View Name**: Which view to show (like "Todo" or "Done" - whatever's in your base file)
+- **Project View Name**: Same idea for projects (like "All" or "Current")
 
-### 4. Create Notes
+### Add Some Notes
 
-See [examples/sample-vault/](examples/sample-vault/) for sample notes:
+Your notes just need tags and frontmatter. The [examples/sample-vault/](examples/sample-vault/) folder has some to get you started:
 
-- **Todos**: Notes with `#todo` tag and frontmatter (status, priority, dates)
-- **Projects**: Notes with `#project` tag and frontmatter (status, dates)
+- **Todos**: Tag them with `#todo`, add frontmatter for status, priority, dates
+- **Projects**: Tag them with `#project`, add whatever frontmatter makes sense
 
 ## Example Setup
 
