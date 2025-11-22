@@ -53,7 +53,7 @@
       "required": false,
       "title": "Project View Name",
       "description": "Optional: Name of the view to use from your project base file (e.g., 'Current', 'ALL')",
-      "placeholder": "ALL"
+      "placeholder": "Current"
     },
     {
       "name": "showRecurrence",
