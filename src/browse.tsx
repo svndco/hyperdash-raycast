@@ -7,11 +7,9 @@ import path from "path";
 
 type Prefs = {
   basesTodoFile: string;
-  todoViewName?: string;
-  todoScanPath?: string;
+  todoViewName: string;
   basesProjectFile: string;
-  projectViewName?: string;
-  projectScanPath?: string;
+  projectViewName: string;
   showRecurrence?: boolean;
   showPriority?: boolean;
   showTimeTracking?: boolean;
@@ -160,8 +158,8 @@ export default function Command() {
       setEffectiveProject(projectTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
 
       // Scan the vault with inline filtering
-      const todoViewName = prefs.todoViewName?.trim() || undefined;
-      const projectViewName = prefs.projectViewName?.trim() || undefined;
+      const todoViewName = prefs.todoViewName.trim();
+      const projectViewName = prefs.projectViewName.trim();
 
       const filterFn = (note: any) => {
         // Apply filters during scan to avoid loading all files into memory

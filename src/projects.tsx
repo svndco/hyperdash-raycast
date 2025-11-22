@@ -7,8 +7,7 @@ import path from "path";
 
 type Prefs = {
   basesProjectFile: string;
-  projectViewName?: string;
-  projectScanPath?: string;
+  projectViewName: string;
 };
 
 function formatDate(dateStr: string): string {
@@ -110,7 +109,7 @@ export default function Command() {
       setEffectiveProject(projectTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
 
       // Scan the vault with inline filtering
-      const projectViewName = prefs.projectViewName?.trim() || undefined;
+      const projectViewName = prefs.projectViewName.trim();
 
       const filterFn = (note: any) => {
         // Apply filters during scan to avoid loading all files into memory
