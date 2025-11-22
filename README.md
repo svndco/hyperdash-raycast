@@ -146,11 +146,15 @@ Coming from pre-4.0.1?
 
 ## Installation
 
-### From Raycast Store (Coming Soon)
+### From Raycast Store (Recommended)
 
 Search for "hyperDASH" in the Raycast Store and hit Install.
 
-### From Source
+**Note:** The extension has been submitted to the Raycast Store and is currently under review. Once approved, this will be the easiest way to install and get automatic updates.
+
+### From Source (Advanced)
+
+Want to run the latest development version?
 
 1. Clone this repo
 2. `npm install`
