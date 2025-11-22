@@ -14,7 +14,7 @@ type ExtensionPreferences = {
   "todoViewName": string,
   /** Project Base File - Path to your .base file for projects (vault auto-detected, cache used for speed) */
   "basesProjectFile": string,
-  /** Project View Name - Name of the view to use from your project base file (e.g., 'Current', 'ALL') */
+  /** Project View Name - Name of the view to use from your project base file (e.g., 'ALL', 'Current') */
   "projectViewName": string,
   /** Display Features - Display recurrence patterns for recurring tasks */
   "showRecurrence": boolean,
