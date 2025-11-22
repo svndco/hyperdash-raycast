@@ -17,9 +17,9 @@ filters:
 # Views - additional filtering on top of base filters
 # Each view creates a different perspective of your projects
 views:
-  # "ALL" view - shows all projects
+  # "All" view - shows all projects
   - type: table
-    name: ALL
+    name: All
     order:
       - file.name
       - status
@@ -75,5 +75,4 @@ views:
 # Usage:
 # 1. Place this file anywhere in your Obsidian vault
 # 2. In Raycast preferences, set "Project Base File" to this file's path
-# 3. Optionally set "Project View Name" to "ALL" or "Current"
-# 4. Leave empty to use default filtering (shows all projects)
+# 3. Set "Project View Name" to "All" or "Current"

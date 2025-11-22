@@ -53,9 +53,9 @@
       "type": "textfield",
       "required": true,
       "title": "Project View Name",
-      "description": "Name of the view to use from your project base file (e.g., 'ALL', 'Current')",
-      "placeholder": "ALL",
-      "default": "ALL"
+      "description": "Name of the view to use from your project base file (e.g., 'All', 'Current')",
+      "placeholder": "All",
+      "default": "All"
     },
     {
       "name": "showRecurrence",
