@@ -376,42 +376,42 @@ export default function Command() {
       {inProgress.length > 0 && (
         <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
           {inProgress.map((n) => (
-            <NoteItem key={`inprogress-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <NoteItem key={`inprogress-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {upNext.length > 0 && (
         <List.Section title={`Up Next (${upNext.length})`} subtitle="status: next">
           {upNext.map((n) => (
-            <NoteItem key={`upnext-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <NoteItem key={`upnext-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {todoItems.length > 0 && (
         <List.Section title={`Todo (${todoItems.length})`} subtitle="status: todo">
           {todoItems.map((n) => (
-            <NoteItem key={`todo-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <NoteItem key={`todo-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {holdStuck.length > 0 && (
         <List.Section title={`Hold/Stuck (${holdStuck.length})`} subtitle="status: hold/stuck">
           {holdStuck.map((n) => (
-            <NoteItem key={`hold-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <NoteItem key={`hold-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {waiting.length > 0 && (
         <List.Section title={`Waiting (${waiting.length})`} subtitle="status: waiting">
           {waiting.map((n) => (
-            <NoteItem key={`waiting-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <NoteItem key={`waiting-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {someday.length > 0 && (
         <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
           {someday.map((n) => (
-            <NoteItem key={`someday-${n.path}`} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <NoteItem key={`someday-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}

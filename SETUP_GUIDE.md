@@ -103,7 +103,7 @@ Note content here...
 - `date_scheduled` - Scheduled date
 
 ### Other Fields
-- `priority` - Alphabetical sorting (e.g., `urgent`, `high`, `medium`, `low`)
+- `priority` - Alphabetical sorting (e.g., `1-urgent`, `2-high`, `3-medium`, `4-low`)
 - `project` - Project name (for todos)
 - `recurrence` - Recurrence pattern (e.g., `every week`)
 - `recurrence_anchor` - Anchor point (`due` or `completion`)

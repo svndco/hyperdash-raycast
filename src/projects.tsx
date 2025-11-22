@@ -189,49 +189,49 @@ export default function Command() {
       {planning.length > 0 && (
         <List.Section title={`Planning (${planning.length})`} subtitle="status: planning">
           {planning.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {research.length > 0 && (
         <List.Section title={`Research (${research.length})`} subtitle="status: research">
           {research.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {upNext.length > 0 && (
         <List.Section title={`Up Next (${upNext.length})`} subtitle="status: up-next">
           {upNext.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {inProgress.length > 0 && (
         <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
           {inProgress.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {onHold.length > 0 && (
         <List.Section title={`On Hold (${onHold.length})`} subtitle="status: on-hold">
           {onHold.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {someday.length > 0 && (
         <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
           {someday.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}
       {other.length > 0 && (
         <List.Section title={`Other (${other.length})`}>
           {other.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(false)} onRebuild={() => load(true)} />
+            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
       )}

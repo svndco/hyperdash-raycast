@@ -5,7 +5,7 @@
 
   **A Raycast extension for managing Obsidian Projects and Tasks**
 
-  ![Version](https://img.shields.io/badge/version-1.0.10-green)
+  ![Version](https://img.shields.io/badge/version-1.0.11-green)
   ![License](https://img.shields.io/badge/license-MIT-blue)
   ![TaskNotes](https://img.shields.io/badge/TaskNotes-4.0.1-orange)
 </div>
@@ -39,10 +39,10 @@ Want to try it out? Download the **[examples folder](examples/)** with sample ba
 
 ### Required Preferences
 
-1. **Task Notes Path**: Path to scan for todos (e.g., `/path/to/vault/todos`)
-2. **Project Path**: Path to scan for projects (e.g., `/path/to/vault`)
-3. **Todo Base Path**: Path to your Bases .base file with todo tag definitions
-4. **Project Base Path**: Path to your Bases .base file with project tag definitions
+1. **Todo Base File**: Path to your .base file for todos (vault auto-detected from file location)
+2. **Todo View Name**: Name of the view to use from your todo base file (e.g., 'Todo', 'Done')
+3. **Project Base File**: Path to your .base file for projects (vault auto-detected from file location)
+4. **Project View Name**: Name of the view to use from your project base file (e.g., 'All', 'Current')
 
 ### Display Options
 
