@@ -309,31 +309,37 @@ export async function scanVault(opts: {
       })
     );
 
-    // Filter out nulls and apply custom filter if provided
+    // Filter out nulls only - do NOT apply filterFn during scan
+    // We want to cache unfiltered data and apply filters on retrieval
     for (const note of batchNotes) {
       if (note !== null) {
-        if (filterFn) {
-          const filtered = filterFn(note);
-          if (filtered !== null) {
-            notes.push(filtered);
-          }
-        } else {
-          notes.push(note);
-        }
+        notes.push(note);
       }
     }
   }
 
-  // Store all scanned notes in Raycast Cache (before filtering)
+  // Store all scanned notes in Raycast Cache (UNFILTERED)
   // This allows different filters to be applied to the same cached data
   if (useCache) {
-    // Store the complete notes array (not cachedNotes, which is for old vault cache)
     setCachedNotes(vaultPath, notes);
-    console.log(`[Cache] Stored ${notes.length} notes for ${vaultPath}`);
+    console.log(`[Cache] Stored ${notes.length} unfiltered notes for ${vaultPath}`);
   }
 
   // Also write to vault cache for backwards compatibility (can be removed later)
   await writeCache(vaultPath, cachedNotes);
+
+  // NOW apply filter to the scanned notes before returning
+  if (filterFn) {
+    const filtered: Note[] = [];
+    for (const note of notes) {
+      const result = filterFn(note);
+      if (result !== null) {
+        filtered.push(result);
+      }
+    }
+    console.log(`[Filter] Applied filter: ${notes.length} → ${filtered.length} notes`);
+    return filtered;
+  }
 
   return notes;
 }

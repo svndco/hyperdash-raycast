@@ -144,8 +144,8 @@ export default function Command() {
       setNotes(scanned);
       setIsLoading(false);
 
-      // THEN show toast (non-blocking)
-      showToast({
+      // Fire-and-forget toast (non-blocking, won't be cancelled)
+      void showToast({
         style: Toast.Style.Success,
         title: `✓ Loaded ${scanned.length} projects`
       });

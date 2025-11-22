@@ -198,10 +198,10 @@ export default function Command() {
       setIsLoading(false);
       setLoadingRef(false);
 
-      // THEN show toast (non-blocking)
+      // Fire-and-forget toast (non-blocking, won't be cancelled)
       const todoCount = scanned.filter(n => n.hasTodoTag).length;
       const projectCount = scanned.filter(n => n.hasProjectTag).length;
-      showToast({
+      void showToast({
         style: Toast.Style.Success,
         title: `✓ Loaded ${scanned.length} notes`,
         message: `${todoCount} todos, ${projectCount} projects`
