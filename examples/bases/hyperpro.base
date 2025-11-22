@@ -1,0 +1,79 @@
+# Hyperdash Project Base File
+#
+# This file configures filtering for project notes in Hyperdash.
+# Works with or without the TaskNotes plugin.
+#
+# Requirements:
+# - Place this file inside your Obsidian vault
+# - Vault must have a .obsidian folder for detection
+# - Project notes must have the #project tag
+
+# Base metadata
+title: "Hyperdash Projects"
+
+# The vault path is auto-detected from this file's location
+# Just make sure this .base file is somewhere inside your Obsidian vault
+
+# Filters define which notes to include
+# Multiple filters are combined with AND logic
+filters:
+  # Include notes with the #project tag
+  - property: tags
+    operator: contains_any
+    values:
+      - project
+
+# Views provide additional filtering on top of base filters
+# Use views to create different perspectives
+views:
+  # "ALL" view - shows all projects
+  ALL:
+    # No additional filters - show everything
+
+  # "Current" view - active projects only (planning through in-progress)
+  Current:
+    - property: status
+      operator: in
+      values:
+        - planning
+        - research
+        - up-next
+        - in-progress
+
+  # "Active" view - projects that are currently being worked on
+  Active:
+    - property: status
+      operator: equals
+      value: in-progress
+
+# Supported project statuses (customize as needed):
+# - planning
+# - research
+# - up-next
+# - in-progress
+# - on-hold
+# - someday
+# - done
+# - canceled
+
+# Supported frontmatter fields:
+# - title: Project name
+# - tags: Array of tags (must include "project")
+# - status: Current status
+# - date_due: Target completion date (YYYY-MM-DD)
+# - date_started: Start date (YYYY-MM-DD)
+# - priority: Priority level (optional)
+# - description: Project description (optional)
+
+# Example project note:
+#
+# ---
+# title: Website Redesign
+# tags:
+#   - project
+# status: in-progress
+# date_started: 2025-01-15
+# date_due: 2025-03-01
+# ---
+#
+# Project notes and tasks go here...

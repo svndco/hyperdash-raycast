@@ -1,0 +1,75 @@
+# Hyperdash Todo Base File
+#
+# This file configures filtering for todo notes in Hyperdash.
+# Works with or without the TaskNotes plugin.
+#
+# Requirements:
+# - Place this file inside your Obsidian vault
+# - Vault must have a .obsidian folder for detection
+# - Todo notes must have the #todo tag
+
+# Base metadata
+title: "Hyperdash Todos"
+
+# The vault path is auto-detected from this file's location
+# Just make sure this .base file is somewhere inside your Obsidian vault
+
+# Filters define which notes to include
+# Multiple filters are combined with AND logic
+filters:
+  # Include notes with the #todo tag
+  - property: tags
+    operator: contains_any
+    values:
+      - todo
+
+# Views provide additional filtering on top of base filters
+# Use views to create different perspectives (e.g., active vs completed)
+views:
+  # Default view (no view name specified) - shows all todos except done/canceled
+  default:
+    - property: status
+      operator: not_equals
+      value: done
+    - property: status
+      operator: not_equals
+      value: canceled
+
+  # "Todo" view - active todos only
+  Todo:
+    - property: status
+      operator: not_equals
+      value: done
+    - property: status
+      operator: not_equals
+      value: canceled
+
+  # "Done" view - completed todos
+  Done:
+    - property: status
+      operator: equals
+      value: done
+
+# Supported todo statuses (customize as needed):
+# - todo (default)
+# - in-progress
+# - next (up next)
+# - hold/stuck
+# - waiting
+# - someday
+# - done
+# - canceled
+
+# Supported frontmatter fields:
+# - title: Note title
+# - tags: Array of tags (must include "todo")
+# - status: Current status
+# - priority: Priority level (alphabetical sorting: urgent, high, medium, low)
+# - date_due: Due date (YYYY-MM-DD)
+# - date_started: Start date (YYYY-MM-DD)
+# - date_scheduled: Scheduled date (YYYY-MM-DD)
+# - project: Associated project name
+# - recurrence: Recurrence pattern (e.g., "every week", "every 2 days")
+# - recurrence_anchor: Anchor point ("due" or "completion")
+# - time_tracked: Hours tracked (number)
+# - time_estimate: Estimated hours (number)

@@ -5,7 +5,7 @@
 
   **A Raycast extension for managing Obsidian Projects and Tasks**
 
-  ![Version](https://img.shields.io/badge/version-1.0.7-green)
+  ![Version](https://img.shields.io/badge/version-1.0.10-green)
   ![License](https://img.shields.io/badge/license-MIT-blue)
   ![TaskNotes](https://img.shields.io/badge/TaskNotes-4.0.1-orange)
 </div>
@@ -14,7 +14,15 @@
 
 A powerful Raycast extension for managing Obsidian Projects and Tasks with full TaskNotes 4.0.1 compatibility. Seamlessly browse, filter, and organize your Obsidian vault's tasks and projects directly from Raycast.
 
+**Works with or without the TaskNotes plugin** - just use markdown notes with YAML frontmatter!
+
 ![Hyperdash Screenshot](metadata/hyperdash-1.png)
+
+## Quick Start
+
+New to Hyperdash? Check out the **[Setup Guide](SETUP_GUIDE.md)** for step-by-step instructions!
+
+Want to try it out? Download the **[examples folder](examples/)** with sample base files and notes.
 
 ## Features
 
