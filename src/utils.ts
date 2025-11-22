@@ -3,6 +3,7 @@ import path from "path";
 import fg from "fast-glob";
 import matter from "gray-matter";
 import os from "os";
+import { getCachedNotes, setCachedNotes, isCacheFresh } from "./cache";
 
 const TAG_INLINE = /(^|\\s)#([A-Za-z0-9/_-]+)/g;
 const H1_REGEX = /^#\\s+(.+?)\\s*$/m;
@@ -164,27 +165,31 @@ export async function scanVault(opts: {
   projectTags: string[];
   filterFn?: (note: Note) => Note | null;
   useCache?: boolean;
+  maxAge?: number;
 }): Promise<Note[]> {
-  const { vaultPath, todoTags, projectTags, filterFn, useCache = true } = opts;
+  const { vaultPath, todoTags, projectTags, filterFn, useCache = true, maxAge = 5 * 60 * 1000 } = opts;
 
-  // Try to load from cache first
+  // Try Raycast Cache API first
   if (useCache) {
-    const cache = await readCache(vaultPath);
-    if (cache) {
-      // Convert cached notes to Note objects and apply filter
-      const notes: Note[] = [];
-      for (const cachedNote of cache.notes) {
-        const note = cachedNoteToNote(cachedNote);
-        if (filterFn) {
-          const filtered = filterFn(note);
-          if (filtered !== null) {
-            notes.push(filtered);
+    const cached = getCachedNotes(vaultPath);
+    if (cached && isCacheFresh(vaultPath, maxAge)) {
+      console.log(`[Cache] Hit for ${vaultPath}, ${cached.length} notes`);
+
+      // Apply filter if provided
+      if (filterFn) {
+        const filtered: Note[] = [];
+        for (const note of cached) {
+          const result = filterFn(note);
+          if (result !== null) {
+            filtered.push(result);
           }
-        } else {
-          notes.push(note);
         }
+        return filtered;
       }
-      return notes;
+
+      return cached;
+    } else {
+      console.log(`[Cache] Miss for ${vaultPath}, scanning...`);
     }
   }
 
@@ -319,7 +324,15 @@ export async function scanVault(opts: {
     }
   }
 
-  // Write cache for future use
+  // Store all scanned notes in Raycast Cache (before filtering)
+  // This allows different filters to be applied to the same cached data
+  if (useCache) {
+    // Store the complete notes array (not cachedNotes, which is for old vault cache)
+    setCachedNotes(vaultPath, notes);
+    console.log(`[Cache] Stored ${notes.length} notes for ${vaultPath}`);
+  }
+
+  // Also write to vault cache for backwards compatibility (can be removed later)
   await writeCache(vaultPath, cachedNotes);
 
   return notes;

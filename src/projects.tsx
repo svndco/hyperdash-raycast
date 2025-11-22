@@ -2,6 +2,7 @@ import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast,
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate } from "./utils";
 import { readBaseConfig, evaluateWithView } from "./bases";
+import { clearVaultCache } from "./cache";
 import path from "path";
 
 type Prefs = {
@@ -124,17 +125,30 @@ export default function Command() {
         };
       };
 
-      // Scan vault and show results with toast
+      // Clear cache if rebuild requested
+      if (rebuildCache) {
+        clearVaultCache(projectConfig.vaultPath);
+      }
+
+      // Scan vault with Raycast Cache enabled
       const scanned = await scanVault({
         vaultPath: projectConfig.vaultPath,
         todoTags: [],
         projectTags: [],
-        useCache: false,
-        filterFn
+        useCache: true,  // ✅ Enable Raycast Cache API
+        filterFn,
+        maxAge: 5 * 60 * 1000  // 5 minutes
       });
 
+      // Update UI first (fast!)
       setNotes(scanned);
       setIsLoading(false);
+
+      // THEN show toast (non-blocking)
+      showToast({
+        style: Toast.Style.Success,
+        title: `✓ Loaded ${scanned.length} projects`
+      });
     } catch (e: any) {
       await showToast({ style: Toast.Style.Failure, title: "Failed to load", message: String(e?.message ?? e) });
       setIsLoading(false);
@@ -163,14 +177,10 @@ export default function Command() {
   const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
   const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
 
-  const searchPlaceholder = filteredProjects.length > 0
-    ? `Search ${filteredProjects.length} projects by title…`
-    : "Search projects by title…";
-
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder={searchPlaceholder}
+      searchBarPlaceholder="Search projects by title…"
       onSearchTextChange={setSearchText}
       searchText={searchText}
     >

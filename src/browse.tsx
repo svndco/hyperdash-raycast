@@ -2,6 +2,7 @@ import { Action, ActionPanel, Color, Form, Icon, List, getPreferenceValues, show
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, scanProjects, createProjectNote, createTodoNote } from "./utils";
 import { readBaseConfig, evaluateWithView, type BaseConfig } from "./bases";
+import { clearVaultCache } from "./cache";
 import path from "path";
 
 type Prefs = {
@@ -177,18 +178,34 @@ export default function Command() {
         };
       };
 
-      // Scan vault and show results with toast
+      // Clear cache if rebuild requested
+      if (rebuildCache) {
+        clearVaultCache(todoConfig.vaultPath);
+      }
+
+      // Scan vault with Raycast Cache enabled
       const scanned = await scanVault({
         vaultPath: todoConfig.vaultPath,
         todoTags: [],
         projectTags: [],
-        useCache: false,
-        filterFn
+        useCache: true,  // ✅ Enable Raycast Cache API
+        filterFn,
+        maxAge: 5 * 60 * 1000  // 5 minutes
       });
 
+      // Update UI first (fast!)
       setNotes(scanned);
       setIsLoading(false);
       setLoadingRef(false);
+
+      // THEN show toast (non-blocking)
+      const todoCount = scanned.filter(n => n.hasTodoTag).length;
+      const projectCount = scanned.filter(n => n.hasProjectTag).length;
+      showToast({
+        style: Toast.Style.Success,
+        title: `✓ Loaded ${scanned.length} notes`,
+        message: `${todoCount} todos, ${projectCount} projects`
+      });
     } catch (e: any) {
       await showToast({ style: Toast.Style.Failure, title: "Failed to load", message: String(e?.message ?? e) });
       setIsLoading(false);
@@ -304,14 +321,10 @@ export default function Command() {
     return !todos.some(todo => todo.title.toLowerCase() === searchLower);
   }, [searchText, todos]);
 
-  const searchPlaceholder = notes.length > 0
-    ? `Search ${notes.length} notes by title…`
-    : "Search notes by title…";
-
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder={searchPlaceholder}
+      searchBarPlaceholder="Search notes by title…"
       onSearchTextChange={setSearchText}
       searchText={searchText}
     >
