@@ -34,10 +34,11 @@
     {
       "name": "todoViewName",
       "type": "textfield",
-      "required": false,
+      "required": true,
       "title": "Todo View Name",
-      "description": "Optional: Name of the view to use from your todo base file (e.g., 'Todo', 'Done')",
-      "placeholder": "Todo"
+      "description": "Name of the view to use from your todo base file (e.g., 'Todo', 'Done')",
+      "placeholder": "Todo",
+      "default": "Todo"
     },
     {
       "name": "basesProjectFile",
@@ -50,10 +51,11 @@
     {
       "name": "projectViewName",
       "type": "textfield",
-      "required": false,
+      "required": true,
       "title": "Project View Name",
-      "description": "Optional: Name of the view to use from your project base file (e.g., 'Current', 'ALL')",
-      "placeholder": "Current"
+      "description": "Name of the view to use from your project base file (e.g., 'Current', 'ALL')",
+      "placeholder": "Current",
+      "default": "Current"
     },
     {
       "name": "showRecurrence",

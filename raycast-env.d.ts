@@ -10,12 +10,12 @@
 type ExtensionPreferences = {
   /** Todo Base File - Path to your .base file for todos (vault auto-detected, cache used for speed) */
   "basesTodoFile": string,
-  /** Todo View Name - Optional: Name of the view to use from your todo base file (e.g., 'Todo', 'Done') */
-  "todoViewName"?: string,
+  /** Todo View Name - Name of the view to use from your todo base file (e.g., 'Todo', 'Done') */
+  "todoViewName": string,
   /** Project Base File - Path to your .base file for projects (vault auto-detected, cache used for speed) */
   "basesProjectFile": string,
-  /** Project View Name - Optional: Name of the view to use from your project base file (e.g., 'Current', 'ALL') */
-  "projectViewName"?: string,
+  /** Project View Name - Name of the view to use from your project base file (e.g., 'Current', 'ALL') */
+  "projectViewName": string,
   /** Display Features - Display recurrence patterns for recurring tasks */
   "showRecurrence": boolean,
   /** undefined - Display task priority (use alphabetical names: 1-urgent, 2-high, 3-medium, 4-low) */
