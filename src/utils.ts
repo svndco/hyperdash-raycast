@@ -217,6 +217,10 @@ export async function scanVault(opts: {
   const BATCH_SIZE = 100;
   const limitedEntries = entries; // Process all files for cache
 
+  // Combine todo and project tags for filtering
+  const requiredTags = [...todoTags, ...projectTags].map(t => t.toLowerCase());
+  console.log(`[Scan] Found ${entries.length} files, filtering for tags: ${requiredTags.join(', ')}`);
+
   for (let i = 0; i < limitedEntries.length; i += BATCH_SIZE) {
     const batch = limitedEntries.slice(i, i + BATCH_SIZE);
     const batchNotes = await Promise.all(
@@ -228,6 +232,13 @@ export async function scanVault(opts: {
           const fmTags = normalizeTags((parsed.data as any)?.tags);
           const inlineTags = extractInlineTags(parsed.content);
           const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+
+          // EARLY FILTER: Skip files that don't have any of the required tags
+          // This prevents memory exhaustion on large vaults
+          if (requiredTags.length > 0 && !requiredTags.some(reqTag => tags.includes(reqTag))) {
+            return null;
+          }
+
           const title = extractTitle(parsed.content, (parsed.data as any)?.title, path.parse(rel).name);
 
           // Store in cache (all frontmatter)
@@ -317,6 +328,8 @@ export async function scanVault(opts: {
       }
     }
   }
+
+  console.log(`[Scan] Filtered to ${notes.length} notes with matching tags`);
 
   // Store all scanned notes in Raycast Cache (UNFILTERED)
   // This allows different filters to be applied to the same cached data
@@ -453,15 +466,122 @@ export async function scanProjects(vaultPath: string, projectTags: string[]): Pr
   return Array.from(projects).sort();
 }
 
+/**
+ * Detect the most common folder where notes with the given tags exist
+ * Returns the folder path relative to vault root, or empty string for vault root
+ *
+ * OPTIMIZATION: Uses cached notes if available to avoid scanning entire vault
+ */
+async function detectFolderForTags(vaultPath: string, tags: string[], cachedNotes?: Note[]): Promise<string> {
+  try {
+    // If we have cached notes, use them (much faster!)
+    if (cachedNotes && cachedNotes.length > 0) {
+      const folderCounts = new Map<string, number>();
+
+      for (const note of cachedNotes) {
+        // Check if this note has any of the target tags
+        const hasTag = tags.some(tag => note.tags.includes(tag.toLowerCase()));
+
+        if (hasTag) {
+          // Get the folder path (directory of the file)
+          const folder = path.dirname(note.relativePath);
+          const currentCount = folderCounts.get(folder) || 0;
+          folderCounts.set(folder, currentCount + 1);
+        }
+      }
+
+      // Find the folder with the most notes
+      let bestFolder = "";
+      let maxCount = 0;
+
+      for (const [folder, count] of folderCounts.entries()) {
+        if (count > maxCount) {
+          maxCount = count;
+          bestFolder = folder === "." ? "" : folder;
+        }
+      }
+
+      if (bestFolder) return bestFolder;
+    }
+
+    // Fallback: scan vault (slower, but works if no cache)
+    const entries = await fg(["**/*.md", "**/*.markdown"], {
+      cwd: vaultPath,
+      ignore: [
+        "**/.obsidian/**",
+        "**/.git/**",
+        "**/node_modules/**",
+        "**/log/**",
+        "**/Clippings/**",
+        "**/files/**",
+        "**/.trash/**"
+      ],
+      onlyFiles: true,
+      unique: true,
+      followSymbolicLinks: false
+    });
+
+    // Count folders where notes with these tags exist
+    const folderCounts = new Map<string, number>();
+
+    // Only scan first 100 files for speed
+    const sampled = entries.slice(0, 100);
+
+    for (const rel of sampled) {
+      try {
+        const abs = path.join(vaultPath, rel);
+        const raw = await fs.readFile(abs, "utf8");
+        const parsed = matter(raw);
+        const fmTags = normalizeTags((parsed.data as any)?.tags);
+        const inlineTags = extractInlineTags(parsed.content);
+        const noteTags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+
+        // Check if this note has any of the target tags
+        const hasTag = tags.some(tag => noteTags.includes(tag.toLowerCase()));
+
+        if (hasTag) {
+          // Get the folder path (directory of the file)
+          const folder = path.dirname(rel);
+          const currentCount = folderCounts.get(folder) || 0;
+          folderCounts.set(folder, currentCount + 1);
+        }
+      } catch {
+        // Skip files that can't be read
+      }
+    }
+
+    // Find the folder with the most notes
+    let bestFolder = "";
+    let maxCount = 0;
+
+    for (const [folder, count] of folderCounts.entries()) {
+      if (count > maxCount) {
+        maxCount = count;
+        bestFolder = folder === "." ? "" : folder;
+      }
+    }
+
+    return bestFolder;
+  } catch {
+    // If detection fails, return vault root
+    return "";
+  }
+}
+
 export async function createProjectNote(
   vaultPath: string,
   projectName: string,
-  projectTag: string,
+  projectTags: string[],
   dateStarted?: Date,
-  dateDue?: Date
+  dateDue?: Date,
+  cachedNotes?: Note[]
 ): Promise<void> {
+  // Detect the best folder for this project based on existing notes with same tags
+  const folder = await detectFolderForTags(vaultPath, projectTags, cachedNotes);
   const fileName = `${projectName}.md`;
-  const filePath = path.join(vaultPath, fileName);
+  const filePath = folder
+    ? path.join(vaultPath, folder, fileName)
+    : path.join(vaultPath, fileName);
 
   // Check if file already exists
   try {
@@ -472,12 +592,16 @@ export async function createProjectNote(
     // File doesn't exist, create it
     const now = new Date().toISOString();
 
-    // Build frontmatter with optional dates
+    // Build frontmatter with all TaskNotes properties
     let frontmatter = `---
-tags:
-  - ${projectTag}
-status: planning
-dateCreated: ${now}
+tags:\n`;
+
+    // Add all tags
+    for (const tag of projectTags) {
+      frontmatter += `  - ${tag}\n`;
+    }
+
+    frontmatter += `dateCreated: ${now}
 dateModified: ${now}`;
 
     if (dateStarted) {
@@ -490,7 +614,21 @@ dateModified: ${now}`;
       frontmatter += `\ndate_due: ${dateStr}`;
     }
 
+    // Add all TaskNotes properties with defaults
+    frontmatter += `\npriority: ""`;
+    frontmatter += `\nproject: ""`;
+    frontmatter += `\nrecurrence: ""`;
+    frontmatter += `\nrecurrence_anchor: ""`;
+    frontmatter += `\nstatus: planning`;
+    frontmatter += `\ntime_estimate: 0`;
+    frontmatter += `\ntime_tracked: 0`;
+
     frontmatter += `\n---\n\n# ${projectName}\n\n`;
+
+    // Ensure folder exists
+    if (folder) {
+      await fs.mkdir(path.join(vaultPath, folder), { recursive: true });
+    }
 
     await fs.writeFile(filePath, frontmatter, "utf8");
   }
@@ -499,12 +637,17 @@ dateModified: ${now}`;
 export async function createTodoNote(
   vaultPath: string,
   todoTitle: string,
-  todoTag: string,
+  todoTags: string[],
   dateStarted?: Date,
-  dateDue?: Date
+  dateDue?: Date,
+  cachedNotes?: Note[]
 ): Promise<string> {
+  // Detect the best folder for this todo based on existing notes with same tags
+  const folder = await detectFolderForTags(vaultPath, todoTags, cachedNotes);
   const fileName = `${todoTitle}.md`;
-  const filePath = path.join(vaultPath, fileName);
+  const filePath = folder
+    ? path.join(vaultPath, folder, fileName)
+    : path.join(vaultPath, fileName);
 
   // Check if file already exists
   try {
@@ -515,12 +658,16 @@ export async function createTodoNote(
     // File doesn't exist, create it
     const now = new Date().toISOString();
 
-    // Build frontmatter with optional dates
+    // Build frontmatter with all TaskNotes properties
     let frontmatter = `---
-tags:
-  - ${todoTag}
-status: todo
-dateCreated: ${now}
+tags:\n`;
+
+    // Add all tags
+    for (const tag of todoTags) {
+      frontmatter += `  - ${tag}\n`;
+    }
+
+    frontmatter += `dateCreated: ${now}
 dateModified: ${now}`;
 
     if (dateStarted) {
@@ -533,7 +680,21 @@ dateModified: ${now}`;
       frontmatter += `\ndate_due: ${dateStr}`;
     }
 
+    // Add all TaskNotes properties with defaults
+    frontmatter += `\npriority: ""`;
+    frontmatter += `\nproject: ""`;
+    frontmatter += `\nrecurrence: ""`;
+    frontmatter += `\nrecurrence_anchor: ""`;
+    frontmatter += `\nstatus: todo`;
+    frontmatter += `\ntime_estimate: 0`;
+    frontmatter += `\ntime_tracked: 0`;
+
     frontmatter += `\n---\n\n# ${todoTitle}\n\n`;
+
+    // Ensure folder exists
+    if (folder) {
+      await fs.mkdir(path.join(vaultPath, folder), { recursive: true });
+    }
 
     await fs.writeFile(filePath, frontmatter, "utf8");
     return filePath;

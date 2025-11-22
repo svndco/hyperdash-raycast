@@ -181,11 +181,15 @@ export default function Command() {
         clearVaultCache(todoConfig.vaultPath);
       }
 
+      // Extract tags from base configs for early filtering
+      const todoTags = todoTagFilters.flatMap(f => f.values);
+      const projectTags = projectTagFilters.flatMap(f => f.values);
+
       // Scan vault with Raycast Cache enabled
       const scanned = await scanVault({
         vaultPath: todoConfig.vaultPath,
-        todoTags: [],
-        projectTags: [],
+        todoTags,
+        projectTags,
         useCache: true,  // ✅ Enable Raycast Cache API
         filterFn,
         maxAge: 5 * 60 * 1000  // 5 minutes
@@ -237,7 +241,7 @@ export default function Command() {
         return;
       }
 
-      // Extract first tag from tag filters
+      // Extract all tags from tag filters
       const todoTagFilters = todoConfig.filters.filter(f => f.property === "tags");
       if (todoTagFilters.length === 0 || todoTagFilters[0].values.length === 0) {
         await showToast({
@@ -248,10 +252,34 @@ export default function Command() {
         return;
       }
 
-      const todoTag = todoTagFilters[0].values[0];
+      const todoTags = todoTagFilters.flatMap(f => f.values);
 
-      // Create new todo note (no dates - set later via actions)
-      await createTodoNote(todoConfig.vaultPath, searchText.trim(), todoTag);
+      // Create new todo note (pass cached notes for fast folder detection)
+      const newNotePath = await createTodoNote(todoConfig.vaultPath, searchText.trim(), todoTags, undefined, undefined, notes);
+
+      // Create a Note object for the new todo to add to state immediately
+      const newNote: Note = {
+        title: searchText.trim(),
+        path: newNotePath,
+        relativePath: newNotePath.replace(todoConfig.vaultPath + '/', ''),
+        tags: todoTags.map(t => t.toLowerCase()),
+        mtimeMs: Date.now(),
+        hasTodoTag: true,
+        hasProjectTag: false,
+        status: 'todo',
+        project: undefined,
+        dateDue: undefined,
+        dateStarted: undefined,
+        dateScheduled: undefined,
+        recurrence: undefined,
+        recurrenceAnchor: undefined,
+        priority: undefined,
+        timeTracked: 0,
+        timeEstimate: 0
+      };
+
+      // Add the new note to the current notes state immediately
+      setNotes([...notes, newNote]);
 
       await showToast({
         style: Toast.Style.Success,
@@ -259,9 +287,11 @@ export default function Command() {
         message: searchText.trim()
       });
 
-      // Clear search and refresh
+      // Clear search
       setSearchText("");
-      await load();
+
+      // Clear cache in background so next reload gets fresh data
+      clearVaultCache(todoConfig.vaultPath);
     } catch (error: any) {
       await showToast({ style: Toast.Style.Failure, title: "Failed to create todo", message: error.message });
     }
@@ -534,7 +564,7 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
         return;
       }
 
-      // Extract first tag from tag filters
+      // Extract all tags from tag filters
       const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
       if (projectTagFilters.length === 0 || projectTagFilters[0].values.length === 0) {
         await showToast({
@@ -545,10 +575,10 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
         return;
       }
 
-      const projectTag = projectTagFilters[0].values[0];
+      const projectTags = projectTagFilters.flatMap(f => f.values);
 
       // Create new project note (no dates - set later via actions)
-      await createProjectNote(projectConfig.vaultPath, searchText.trim(), projectTag);
+      await createProjectNote(projectConfig.vaultPath, searchText.trim(), projectTags);
 
       // Set it on the todo
       await updateNoteProject(note.path, searchText.trim());

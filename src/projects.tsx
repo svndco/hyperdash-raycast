@@ -129,11 +129,14 @@ export default function Command() {
         clearVaultCache(projectConfig.vaultPath);
       }
 
+      // Extract tags from base config for early filtering
+      const projectTags = projectTagFilters.flatMap(f => f.values);
+
       // Scan vault with Raycast Cache enabled
       const scanned = await scanVault({
         vaultPath: projectConfig.vaultPath,
         todoTags: [],
-        projectTags: [],
+        projectTags,
         useCache: true,  // ✅ Enable Raycast Cache API
         filterFn,
         maxAge: 5 * 60 * 1000  // 5 minutes
