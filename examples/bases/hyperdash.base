@@ -8,47 +8,39 @@
 # - Vault must have a .obsidian folder for detection
 # - Todo notes must have the #todo tag
 
-# Base metadata
-title: "Hyperdash Todos"
-
-# The vault path is auto-detected from this file's location
-# Just make sure this .base file is somewhere inside your Obsidian vault
-
-# Filters define which notes to include
-# Multiple filters are combined with AND logic
+# Base filters - defines which notes to include
+# Use "or" to match any of the tags, "and" to require all conditions
 filters:
-  # Include notes with the #todo tag
-  - property: tags
-    operator: contains_any
-    values:
-      - todo
+  or:
+    - tags.containsAny("todo")
 
-# Views provide additional filtering on top of base filters
-# Use views to create different perspectives (e.g., active vs completed)
+# Views - additional filtering on top of base filters
+# Each view creates a different perspective of your todos
 views:
-  # Default view (no view name specified) - shows all todos except done/canceled
-  default:
-    - property: status
-      operator: not_equals
-      value: done
-    - property: status
-      operator: not_equals
-      value: canceled
-
-  # "Todo" view - active todos only
-  Todo:
-    - property: status
-      operator: not_equals
-      value: done
-    - property: status
-      operator: not_equals
-      value: canceled
+  # "Todo" view - active todos only (not done or canceled)
+  - type: table
+    name: Todo
+    filters:
+      and:
+        - '!status.contains("canceled")'
+        - '!status.contains("done")'
+    order:
+      - file.name
+      - status
+      - priority
+      - project
+      - date_due
 
   # "Done" view - completed todos
-  Done:
-    - property: status
-      operator: equals
-      value: done
+  - type: table
+    name: Done
+    filters:
+      or:
+        - status.contains("done")
+        - status.contains("canceled")
+    order:
+      - file.name
+      - status
 
 # Supported todo statuses (customize as needed):
 # - todo (default)
@@ -73,3 +65,9 @@ views:
 # - recurrence_anchor: Anchor point ("due" or "completion")
 # - time_tracked: Hours tracked (number)
 # - time_estimate: Estimated hours (number)
+
+# Usage:
+# 1. Place this file anywhere in your Obsidian vault
+# 2. In Raycast preferences, set "Todo Base File" to this file's path
+# 3. Optionally set "Todo View Name" to "Todo" or "Done"
+# 4. Leave empty to use default filtering (shows all todos)

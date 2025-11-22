@@ -8,43 +8,37 @@
 # - Vault must have a .obsidian folder for detection
 # - Project notes must have the #project tag
 
-# Base metadata
-title: "Hyperdash Projects"
-
-# The vault path is auto-detected from this file's location
-# Just make sure this .base file is somewhere inside your Obsidian vault
-
-# Filters define which notes to include
-# Multiple filters are combined with AND logic
+# Base filters - defines which notes to include
+# Use "or" to match any of the tags, "and" to require all conditions
 filters:
-  # Include notes with the #project tag
-  - property: tags
-    operator: contains_any
-    values:
-      - project
+  or:
+    - tags.containsAny("project")
 
-# Views provide additional filtering on top of base filters
-# Use views to create different perspectives
+# Views - additional filtering on top of base filters
+# Each view creates a different perspective of your projects
 views:
   # "ALL" view - shows all projects
-  ALL:
-    # No additional filters - show everything
+  - type: table
+    name: ALL
+    order:
+      - file.name
+      - status
+      - date_due
+      - tags
 
   # "Current" view - active projects only (planning through in-progress)
-  Current:
-    - property: status
-      operator: in
-      values:
-        - planning
-        - research
-        - up-next
-        - in-progress
-
-  # "Active" view - projects that are currently being worked on
-  Active:
-    - property: status
-      operator: equals
-      value: in-progress
+  - type: table
+    name: Current
+    filters:
+      or:
+        - status == ["planning"]
+        - status == ["research"]
+        - status == ["up-next"]
+        - status == ["in-progress"]
+    order:
+      - file.name
+      - status
+      - date_due
 
 # Supported project statuses (customize as needed):
 # - planning
@@ -77,3 +71,9 @@ views:
 # ---
 #
 # Project notes and tasks go here...
+
+# Usage:
+# 1. Place this file anywhere in your Obsidian vault
+# 2. In Raycast preferences, set "Project Base File" to this file's path
+# 3. Optionally set "Project View Name" to "ALL" or "Current"
+# 4. Leave empty to use default filtering (shows all projects)
