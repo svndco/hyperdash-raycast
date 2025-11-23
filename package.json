@@ -93,7 +93,7 @@
     }
   ],
   "scripts": {
-    "build": "ray build -e dist",
+    "build": "ray build -e dist -o dist",
     "dev": "ray build -e dev",
     "lint": "ray lint",
     "fix-lint": "ray lint --fix",
