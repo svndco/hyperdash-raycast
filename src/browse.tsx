@@ -476,7 +476,7 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   const { pop } = useNavigation();
   const prefs = getPreferenceValues<Prefs>();
   const [isLoading, setIsLoading] = useState(true);
-  const [projects, setProjects] = useState<string[]>([]);
+  const [projectNotes, setProjectNotes] = useState<Note[]>([]);
   const [searchText, setSearchText] = useState<string>("");
 
   useEffect(() => {
@@ -520,12 +520,8 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
           maxAge: 5 * 60 * 1000
         });
 
-        const projectList = scanned
-          .filter(n => n.hasProjectTag)
-          .map(n => n.title)
-          .sort();
-
-        setProjects(projectList);
+        const notes = scanned.filter(n => n.hasProjectTag);
+        setProjectNotes(notes);
       } catch (error: any) {
         await showToast({ style: Toast.Style.Failure, title: "Failed to load projects", message: error.message });
       } finally {
@@ -537,17 +533,26 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
 
   // Filter projects by search text
   const filteredProjects = useMemo(() => {
-    if (!searchText.trim()) return projects;
+    if (!searchText.trim()) return projectNotes;
     const searchLower = searchText.trim().toLowerCase();
-    return projects.filter((proj) => proj.toLowerCase().includes(searchLower));
-  }, [projects, searchText]);
+    return projectNotes.filter((proj) => proj.title.toLowerCase().includes(searchLower));
+  }, [projectNotes, searchText]);
+
+  // Group by status
+  const planning = useMemo(() => filteredProjects.filter((n) => n.status === "planning").sort(sortByMtimeDesc), [filteredProjects]);
+  const research = useMemo(() => filteredProjects.filter((n) => n.status === "research").sort(sortByMtimeDesc), [filteredProjects]);
+  const upNext = useMemo(() => filteredProjects.filter((n) => n.status === "up-next" || n.status === "up next").sort(sortByMtimeDesc), [filteredProjects]);
+  const inProgress = useMemo(() => filteredProjects.filter((n) => n.status === "in-progress" || n.status === "active").sort(sortByMtimeDesc), [filteredProjects]);
+  const onHold = useMemo(() => filteredProjects.filter((n) => n.status === "on-hold" || n.status === "hold" || n.status === "paused").sort(sortByMtimeDesc), [filteredProjects]);
+  const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
+  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
 
   // Check if search text exactly matches any existing project
   const showCreateOption = useMemo(() => {
     if (!searchText.trim()) return false;
     const searchLower = searchText.trim().toLowerCase();
-    return !projects.some(proj => proj.toLowerCase() === searchLower);
-  }, [searchText, projects]);
+    return !projectNotes.some(proj => proj.title.toLowerCase() === searchLower);
+  }, [searchText, projectNotes]);
 
   async function handleSelectProject(projectName: string) {
     try {
@@ -673,25 +678,153 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
           />
         )}
       </List.Section>
-      <List.Section title="Existing Projects">
-        {filteredProjects.map((proj) => (
-          <List.Item
-            key={proj}
-            title={proj}
-            icon={Icon.Folder}
-            accessories={proj === note.project ? [{ text: "Current" }] : []}
-            actions={
-              <ActionPanel>
-                <Action
-                  title="Set Project"
-                  icon={Icon.Checkmark}
-                  onAction={() => handleSelectProject(proj)}
-                />
-              </ActionPanel>
-            }
-          />
-        ))}
-      </List.Section>
+      {planning.length > 0 && (
+        <List.Section title={`Planning (${planning.length})`}>
+          {planning.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      {research.length > 0 && (
+        <List.Section title={`Research (${research.length})`}>
+          {research.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      {upNext.length > 0 && (
+        <List.Section title={`Up Next (${upNext.length})`}>
+          {upNext.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      {inProgress.length > 0 && (
+        <List.Section title={`In Progress (${inProgress.length})`}>
+          {inProgress.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      {onHold.length > 0 && (
+        <List.Section title={`On Hold (${onHold.length})`}>
+          {onHold.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      {someday.length > 0 && (
+        <List.Section title={`Someday (${someday.length})`}>
+          {someday.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
+      {other.length > 0 && (
+        <List.Section title={`Other (${other.length})`}>
+          {other.map((proj) => (
+            <List.Item
+              key={proj.path}
+              title={proj.title}
+              icon={Icon.Folder}
+              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              actions={
+                <ActionPanel>
+                  <Action
+                    title="Set Project"
+                    icon={Icon.Checkmark}
+                    onAction={() => handleSelectProject(proj.title)}
+                  />
+                </ActionPanel>
+              }
+            />
+          ))}
+        </List.Section>
+      )}
     </List>
   );
 }
