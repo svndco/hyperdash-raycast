@@ -368,6 +368,12 @@ export default function Command() {
                   icon={Icon.Plus}
                   onAction={handleCreateTodo}
                 />
+                <Action
+                  title="Refresh"
+                  icon={Icon.RotateClockwise}
+                  shortcut={{ modifiers: ["cmd"], key: "r" }}
+                  onAction={() => load(true)}
+                />
               </ActionPanel>
             }
           />
@@ -414,6 +420,22 @@ export default function Command() {
             <NoteItem key={`someday-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
+      )}
+      {!showCreateOption && todos.length === 0 && !isLoading && (
+        <List.EmptyView
+          title="No Todos Found"
+          description="Try refreshing or creating a new todo"
+          actions={
+            <ActionPanel>
+              <Action
+                title="Refresh"
+                icon={Icon.RotateClockwise}
+                shortcut={{ modifiers: ["cmd"], key: "r" }}
+                onAction={() => load(true)}
+              />
+            </ActionPanel>
+          }
+        />
       )}
     </List>
   );

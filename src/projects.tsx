@@ -290,6 +290,12 @@ export default function Command() {
                   icon={Icon.Plus}
                   onAction={handleCreateProject}
                 />
+                <Action
+                  title="Refresh"
+                  icon={Icon.RotateClockwise}
+                  shortcut={{ modifiers: ["cmd"], key: "r" }}
+                  onAction={() => load(true)}
+                />
               </ActionPanel>
             }
           />
@@ -343,6 +349,22 @@ export default function Command() {
             <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
           ))}
         </List.Section>
+      )}
+      {!showCreateOption && projects.length === 0 && !isLoading && (
+        <List.EmptyView
+          title="No Projects Found"
+          description="Try refreshing or creating a new project"
+          actions={
+            <ActionPanel>
+              <Action
+                title="Refresh"
+                icon={Icon.RotateClockwise}
+                shortcut={{ modifiers: ["cmd"], key: "r" }}
+                onAction={() => load(true)}
+              />
+            </ActionPanel>
+          }
+        />
       )}
     </List>
   );

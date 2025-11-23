@@ -129,6 +129,16 @@ All your todos, grouped by status:
 ### Project Notes
 All your projects in one place
 
+## Tips & Tricks
+
+### Refreshing Your Lists
+Made changes to notes outside of Raycast? Just hit `Cmd+R` to refresh and clear the cache. Works from:
+- Any todo or project item
+- The "Create New" section when searching
+- The empty view when no items are found
+
+This ensures you always see the latest data from your vault, especially handy after deleting or modifying notes elsewhere.
+
 ## If Things Are Slow
 
 Got a massive vault? Drop "Maximum Results" to 200-300.
