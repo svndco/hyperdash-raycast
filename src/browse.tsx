@@ -499,11 +499,32 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
           return;
         }
 
-        // Extract tags from project filters (for backwards compatibility with scanProjects)
+        // Extract tags from project filters
         const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
         const projectTags = projectTagFilters.flatMap(f => f.values.map(v => v.toLowerCase()));
 
-        const projectList = await scanProjects(projectConfig.vaultPath, projectTags);
+        // Use cached vault scan with filter instead of scanProjects
+        const projectViewName = prefs.projectViewName?.trim() || "";
+        const filterFn = (n: any) => {
+          const matches = evaluateWithView(projectConfig, n, projectViewName);
+          if (!matches) return null;
+          return { ...n, hasProjectTag: true };
+        };
+
+        const scanned = await scanVault({
+          vaultPath: projectConfig.vaultPath,
+          todoTags: [],
+          projectTags,
+          useCache: true,
+          filterFn,
+          maxAge: 5 * 60 * 1000
+        });
+
+        const projectList = scanned
+          .filter(n => n.hasProjectTag)
+          .map(n => n.title)
+          .sort();
+
         setProjects(projectList);
       } catch (error: any) {
         await showToast({ style: Toast.Style.Failure, title: "Failed to load projects", message: error.message });
