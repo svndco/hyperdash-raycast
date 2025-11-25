@@ -429,6 +429,55 @@ export async function updateNoteProject(filePath: string, project: string): Prom
   await fs.writeFile(filePath, updated, "utf8");
 }
 
+export async function updateNotePriority(filePath: string, priority: string) {
+  const raw = await fs.readFile(filePath, "utf8");
+  const parsed = matter(raw);
+
+  if (priority) {
+    parsed.data.priority = priority;
+  } else {
+    delete parsed.data.priority;
+  }
+  parsed.data.dateModified = new Date().toISOString();
+
+  const updated = matter.stringify(parsed.content, parsed.data);
+  await fs.writeFile(filePath, updated, "utf8");
+}
+
+export async function updateNoteTitle(filePath: string, newTitle: string): Promise<string> {
+  // Update frontmatter and content
+  const raw = await fs.readFile(filePath, "utf8");
+  const parsed = matter(raw);
+
+  // Update title in frontmatter if present
+  if (parsed.data.title !== undefined) {
+    parsed.data.title = newTitle;
+  }
+
+  // Update H1 heading in content
+  const lines = parsed.content.split('\n');
+  if (lines[0]?.startsWith('# ')) {
+    lines[0] = `# ${newTitle}`;
+    parsed.content = lines.join('\n');
+  }
+
+  parsed.data.dateModified = new Date().toISOString();
+  const updated = matter.stringify(parsed.content, parsed.data);
+  await fs.writeFile(filePath, updated, "utf8");
+
+  // Rename file
+  const dir = path.dirname(filePath);
+  const ext = path.extname(filePath);
+  const sanitizedTitle = newTitle.replace(/[/\\?%*:|"<>]/g, '-'); // Remove invalid chars
+  const newPath = path.join(dir, `${sanitizedTitle}${ext}`);
+
+  if (filePath !== newPath) {
+    await fs.rename(filePath, newPath);
+  }
+
+  return newPath;
+}
+
 export async function scanProjects(vaultPath: string, projectTags: string[]): Promise<string[]> {
   const entries = await fg(["**/*.md", "**/*.markdown"], {
     cwd: vaultPath,

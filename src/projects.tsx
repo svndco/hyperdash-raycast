@@ -1,6 +1,6 @@
-import { Action, ActionPanel, Alert, Color, confirmAlert, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Alert, Color, confirmAlert, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, createProjectNote } from "./utils";
+import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNotePriority, updateNoteTitle, createProjectNote } from "./utils";
 import { readBaseConfig, evaluateWithView } from "./bases";
 import { clearVaultCache } from "./cache";
 import path from "path";
@@ -423,6 +423,47 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
   );
 }
 
+function EditTitleForm({ note, onTitleUpdated }: { note: Note; onTitleUpdated: () => void }) {
+  const { pop } = useNavigation();
+  const [title, setTitle] = useState(note.title);
+
+  async function handleSubmit() {
+    try {
+      await updateNoteTitle(note.path, title);
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Title Updated",
+        message: title,
+      });
+      pop();
+      onTitleUpdated();
+    } catch (error: any) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to update",
+        message: error.message,
+      });
+    }
+  }
+
+  return (
+    <Form
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm title="Update Title" onSubmit={handleSubmit} />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="title"
+        title="Title"
+        value={title}
+        onChange={setTitle}
+      />
+    </Form>
+  );
+}
+
 function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () => void; onRebuild: () => void }) {
   const accessories = [];
   if (note.dateDue) {
@@ -521,6 +562,72 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
             title="Set Status"
             icon={Icon.Pencil}
             target={<SetStatusForm note={note} onStatusUpdated={onRefresh} />}
+          />
+          <Action.Push
+            title="Edit Title"
+            icon={Icon.Pencil}
+            target={<EditTitleForm note={note} onTitleUpdated={onRefresh} />}
+          />
+          <ActionPanel.Submenu title="Set Priority" icon={Icon.Flag}>
+            <Action
+              title="1 - Urgent"
+              icon={Icon.ExclamationMark}
+              onAction={async () => {
+                await updateNotePriority(note.path, "1-urgent");
+                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "1 - Urgent" });
+                onRefresh();
+              }}
+            />
+            <Action
+              title="2 - High"
+              icon={Icon.Flag}
+              onAction={async () => {
+                await updateNotePriority(note.path, "2-high");
+                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "2 - High" });
+                onRefresh();
+              }}
+            />
+            <Action
+              title="3 - Medium"
+              icon={Icon.Circle}
+              onAction={async () => {
+                await updateNotePriority(note.path, "3-medium");
+                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "3 - Medium" });
+                onRefresh();
+              }}
+            />
+            <Action
+              title="4 - Low"
+              icon={Icon.Minus}
+              onAction={async () => {
+                await updateNotePriority(note.path, "4-low");
+                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "4 - Low" });
+                onRefresh();
+              }}
+            />
+            <Action
+              title="Clear Priority"
+              icon={Icon.XMarkCircle}
+              onAction={async () => {
+                await updateNotePriority(note.path, "");
+                await showToast({ style: Toast.Style.Success, title: "Priority Cleared" });
+                onRefresh();
+              }}
+            />
+          </ActionPanel.Submenu>
+          <Action
+            title="Mark as Done"
+            icon={Icon.CheckCircle}
+            shortcut={{ modifiers: ["cmd"], key: "d" }}
+            onAction={async () => {
+              await updateNoteStatus(note.path, "done");
+              await showToast({
+                style: Toast.Style.Success,
+                title: "Marked as Done",
+                message: note.title
+              });
+              onRefresh();
+            }}
           />
           <Action.PickDate
             title="Set Due Date"
