@@ -1,44 +1,53 @@
 # Hyperdash Examples
 
-This folder contains example configurations and sample notes to help you get started with Hyperdash.
+This folder contains a complete onboarding experience to help you get started with Hyperdash, inspired by Things 3's excellent first-time user experience.
 
 ## What's Included
 
-- **bases/** - Example `.base` files for filtering todos and projects
-- **sample-vault/** - Minimal Obsidian vault with sample notes
+- **sample-vault/** - A ready-to-use Obsidian vault with example todos and projects
+- **bases/** - Pre-configured `.base` files for filtering todos and projects
 
-## Quick Setup
+The sample vault includes friendly, interactive examples that demonstrate every feature while being immediately useful. Just like Things 3, these examples help you learn by doing!
 
-### Option 1: Use as Template
+## Quick Start
 
-1. Copy `sample-vault/` into your existing Obsidian vault
-2. Copy `bases/` files into your vault (anywhere is fine)
-3. Edit the base files to match your vault structure
-4. Configure Raycast with paths to your base files
+### Option 1: Try the Examples First (Recommended)
 
-### Option 2: Download as ZIP
+1. Download this `examples/` folder
+2. Open `sample-vault/` directly in Obsidian (File → Open Vault)
+3. Copy the `.base` files from `bases/` into the `sample-vault/` folder
+4. In Raycast preferences, set:
+   - Todo Base File: `path/to/sample-vault/hyperdash.base`
+   - Project Base File: `path/to/sample-vault/hyperpro.base`
+5. Open Hyperdash in Raycast and explore the examples!
 
-1. Download this examples folder as a ZIP
-2. Extract into your Obsidian vault
-3. Follow "Option 1" steps above
+### Option 2: Add to Existing Vault
+
+1. Copy `sample-vault/todos/` and `sample-vault/projects/` into your existing vault
+2. Copy `bases/` files into your vault (root or anywhere you prefer)
+3. Configure Raycast with paths to your base files
+4. Explore the examples, then customize or delete them
 
 ## File Structure
 
 ```
 examples/
 ├── bases/
-│   ├── hyperdash.base          # Todo filter configuration
-│   └── hyperpro.base           # Project filter configuration
+│   ├── hyperdash.base                    # Todo filter configuration
+│   └── hyperpro.base                     # Project filter configuration
 └── sample-vault/
-    ├── .obsidian/              # Required for vault detection
+    ├── .obsidian/                        # Required for Obsidian vault
     ├── todos/
-    │   ├── write-docs.md       # High priority, overdue
-    │   ├── review-pr.md        # In progress
-    │   └── setup-ci.md         # Waiting status
+    │   ├── explore-hyperdash.md          # Welcome task (high priority, due tomorrow)
+    │   ├── plan-weekly-review.md         # In progress, recurring weekly
+    │   ├── organize-notes.md             # Next up, linked to project
+    │   ├── try-creating-task.md          # Someday idea
+    │   └── example-completed-task.md     # Shows "Done" view
     └── projects/
-        ├── website-redesign.md # In progress, recurring tasks
-        ├── api-v2.md           # Planning phase
-        └── mobile-app.md       # Someday project
+        ├── personal-organization.md      # Active project
+        ├── learn-raycast-extensions.md   # Planning phase
+        ├── obsidian-setup.md             # Up next
+        └── ideas-backlog.md              # Someday/backlog
 ```
 
 ## Base Files Explained
@@ -68,42 +77,58 @@ Key features:
 - Status-based views
 - Project lifecycle tracking
 
-## Sample Notes Explained
+## Example Notes Explained
 
-### Todo Examples
+### Welcome & Onboarding Todos
 
-**write-docs.md** - Demonstrates:
-- High priority task
-- Overdue date (shows in red)
-- Project association
-- Time tracking
+**explore-hyperdash.md** - Your first task! Demonstrates:
+- High priority with due date
+- Actionable checklist to try features
+- Friendly intro to the extension
 
-**review-pr.md** - Demonstrates:
+**plan-weekly-review.md** - Active work. Shows:
 - In-progress status
-- Today's due date (shows in green)
-- Recurrence pattern (weekly)
+- Recurring weekly pattern
+- Time tracking (30min tracked / 1hr estimate)
+- Due today highlighting
 
-**setup-ci.md** - Demonstrates:
-- Waiting status
-- Future scheduled date
+**organize-notes.md** - Queued up. Demonstrates:
+- Next status (after current tasks)
+- Low priority
+- Scheduled date (not a due date)
+- Project association
+
+**try-creating-task.md** - Future idea. Shows:
+- Someday status (backlog)
 - Minimal frontmatter
+- Tutorial for creating tasks
 
-### Project Examples
+**example-completed-task.md** - Done! Demonstrates:
+- Completed status
+- Appears in "Done" view
+- Historical due date
 
-**website-redesign.md** - Demonstrates:
-- In-progress project
-- Due date tracking
-- Full metadata set
+### Example Projects
 
-**api-v2.md** - Demonstrates:
-- Planning phase
-- Start and due dates
-- Research status
+**personal-organization.md** - Active work. Shows:
+- In-progress status
+- Linked tasks
+- Start date, no hard deadline
 
-**mobile-app.md** - Demonstrates:
-- Someday/backlog project
-- Minimal configuration
-- Future planning
+**learn-raycast-extensions.md** - Planning phase. Demonstrates:
+- Planning status
+- Multiple tags
+- Learning-focused project
+
+**obsidian-setup.md** - Up next. Shows:
+- Up-next status
+- Target due date
+- Actionable checklist
+
+**ideas-backlog.md** - Someday. Demonstrates:
+- Someday status
+- Minimal frontmatter
+- Idea collection
 
 ## Customization
 
@@ -129,30 +154,53 @@ views:
       value: done
 ```
 
+## The Things 3 Approach
+
+Like Things 3's excellent onboarding, these examples:
+- **Teach by doing** - Each example demonstrates a specific feature
+- **Are immediately useful** - Real tasks you might actually want to do
+- **Guide you forward** - Natural progression from exploration to creation
+- **Are easy to clean up** - Delete them when you're ready for your own system
+
 ## Works Without TaskNotes
 
-These examples work standalone - no TaskNotes plugin required!
+These examples work standalone - no TaskNotes plugin or external API required!
 
 Just:
 1. Create markdown notes with YAML frontmatter
 2. Add appropriate tags (`#todo`, `#project`)
 3. Use status/priority/date fields as shown
 
-If you DO use TaskNotes:
-- All features remain compatible
+If you DO use TaskNotes or Hyperdash API:
+- All features remain fully compatible
 - Base files work with both systems
-- Share the same vault structure
+- Same vault structure and file format
 
 ## Testing the Examples
 
-1. Copy `sample-vault/.obsidian/` to make it a valid Obsidian vault
-2. Open `sample-vault/` in Obsidian
-3. Place the base files inside `sample-vault/`
-4. Update base file paths in Raycast preferences:
+1. Download or copy the `examples/` folder
+2. Open `sample-vault/` in Obsidian (it's already a valid vault!)
+3. Copy the `.base` files from `bases/` into `sample-vault/`
+4. Update Raycast preferences (⌘,):
    - Todo Base File: `/path/to/sample-vault/hyperdash.base`
    - Project Base File: `/path/to/sample-vault/hyperpro.base`
-5. Open Hyperdash in Raycast - you should see all sample todos and projects
+5. Open Hyperdash in Raycast and start exploring!
 
-## Need More Help?
+## Your First Steps
 
-See the [main setup guide](../SETUP_GUIDE.md) for detailed configuration instructions.
+1. **Explore** - Open "Explore Hyperdash Features" task and try the actions
+2. **Switch views** - Try "Todo" and "Done" views, "All" and "Current" projects
+3. **Edit a task** - Open any task in Obsidian and modify it
+4. **Mark complete** - Use the complete action on a task
+5. **Delete examples** - When ready, delete these examples and create your own!
+
+## Next Steps
+
+- See the [main setup guide](../SETUP_GUIDE.md) for detailed configuration
+- Create your own tasks and projects
+- Customize the base files for your workflow
+- Set up keyboard shortcuts in Raycast for quick access
+
+## Feedback
+
+Found these examples helpful? Let us know what worked well or what could be improved!
