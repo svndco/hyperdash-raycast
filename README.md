@@ -3,18 +3,18 @@
 <div align="center">
   <img src="icon.png" width="128" height="128" alt="hyperDASH Icon">
 
-  **A Raycast extension for managing Obsidian Projects and Tasks**
+  **A standalone todo manager for Raycast, fully compatible with Obsidian**
 
-  ![Version](https://img.shields.io/badge/version-1.0.12-green)
+  ![Version](https://img.shields.io/badge/version-1.0.14-green)
   ![License](https://img.shields.io/badge/license-MIT-blue)
   ![TaskNotes](https://img.shields.io/badge/TaskNotes-4.0.1-orange)
 </div>
 
 ---
 
-Your all-in-one Obsidian task and project manager, right in Raycast. Browse, filter, and organize everything from your vault without leaving your keyboard.
+Your lightweight, file-based todo manager in Raycast. Manage tasks and projects using simple markdown files with YAML frontmatter - use it standalone or sync with Obsidian.
 
-**Works standalone or plays nice with TaskNotes and Bases** - it's just markdown notes with YAML frontmatter, so use what you want!
+**Works anywhere** - uses base files for configuration and `.md` files for todos. No Obsidian required, but fully compatible with TaskNotes 4.0.1 and Bases plugin when you want the integration.
 
 ![Hyperdash Screenshot](metadata/hyperdash-1.png)
 
@@ -24,16 +24,45 @@ New to Hyperdash? Check out the **[Setup Guide](SETUP_GUIDE.md)** to get rolling
 
 Want to see it in action first? Grab the **[examples folder](examples/)** with sample base files and notes.
 
+## Use It Your Way
+
+### Standalone Mode
+Use hyperDASH without Obsidian! Just need:
+- A `.base` configuration file (defines your todo/project filters)
+- Markdown files with YAML frontmatter for tasks and projects
+- Any text editor or sync service (Dropbox, iCloud, Git, etc.)
+
+Your tasks live in simple `.md` files you can edit anywhere. HyperDASH reads the base file to know what to display and where to save new tasks.
+
+### With Obsidian
+Already using Obsidian? Perfect! HyperDASH integrates seamlessly:
+- Works with existing TaskNotes 4.0.1 setups
+- Leverages Bases plugin configurations
+- Two-way sync - edit in Raycast or Obsidian
+- All your plugins and themes still work
+
 ## What You Get
 
-- **Smart filtering** via Obsidian Bases files (or roll your own)
-- **Full TaskNotes 4.0.1 compatibility** if you're using it:
+### Standalone Todo Management
+- **Quick actions**: Mark as Done (Cmd+D), Edit Title, Set Priority, Delete tasks
+- **@ mentions**: Type `@project-name` to quickly filter and assign projects
+- **File-based**: Simple `.md` files with YAML frontmatter - edit anywhere, sync everywhere
+- **Smart filtering**: Configure views with base files (no Obsidian plugin required)
+- **Create on the fly**: Add new tasks and projects directly from Raycast
+
+### Obsidian Integration (Optional)
+- **Full TaskNotes 4.0.1 compatibility** when using with Obsidian:
   - Recurrence patterns (`recurrence` and `recurrence_anchor`)
   - Alphabetical priority sorting (`1-urgent`, `2-high`, `3-medium`, `4-low`)
   - Time tracking (`time_tracked` and `time_estimate`)
+- **Bases plugin support**: Leverage existing base file configurations
+- **Bidirectional sync**: Edit in Raycast or Obsidian, changes reflected everywhere
+
+### Performance & Flexibility
 - **Intelligent sorting**: Priority → Due Date → Modified Time
-- **Fast performance**: Handles large vaults (30K+ files) with configurable limits
+- **Fast performance**: Handles large collections (30K+ files) with configurable limits
 - **Your way**: Show or hide recurrence, priority, and time tracking
+- **Instant cache**: Subsequent loads are blazing fast
 
 ## Setup
 
@@ -118,16 +147,32 @@ Shows as `2h tracked` or `2h / 4h` (tracked/estimate)
 ## Commands
 
 ### Task Notes
-All your todos, grouped by status:
-- In Progress
-- Up Next
-- Todo
-- Hold/Stuck
-- Waiting
-- Someday
+Browse and manage todos grouped by status:
+- **In Progress** - Active tasks
+- **Up Next** - Queued for action
+- **Todo** - Your backlog
+- **Hold/Stuck** - Blocked tasks
+- **Waiting** - Awaiting external input
+- **Someday** - Future ideas
+
+**Quick Actions:**
+- `Cmd+D` - Mark as Done
+- `Cmd+K` → Edit Title - Rename task and file
+- `Cmd+K` → Set Priority - Choose 1-urgent through 4-low
+- `Cmd+K` → Set Status - Change task status
+- `Cmd+K` → Set Project - Assign to project (use @ to filter)
+- `Cmd+K` → Delete - Remove task with confirmation
 
 ### Project Notes
-All your projects in one place
+Manage projects grouped by status:
+- **Planning** - Early stage
+- **Research** - Gathering info
+- **Up Next** - Ready to start
+- **In Progress** - Currently active
+- **On Hold** - Paused
+- **Someday** - Future projects
+
+**Same quick actions** as tasks, plus project-specific date tracking
 
 ## Tips & Tricks
 
