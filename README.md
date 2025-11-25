@@ -38,9 +38,9 @@ Use hyperDASH without Obsidian! Just need:
 
 **Getting Started Standalone:**
 1. Download the **[examples folder](examples/)** - includes ready-to-use sample vault
-2. You'll get interactive example tasks and projects that demonstrate all features
-3. Copy the `.base` files into the sample vault
-4. Point hyperDASH preferences at these base files
+2. You'll get a complete Obsidian vault with `.base` files and interactive examples
+3. Open `sample-vault/` in Obsidian
+4. Point hyperDASH preferences at the base files (already in the vault!)
 5. Explore the examples, then delete them and add your own tasks!
 
 Your tasks live in simple `.md` files you can edit anywhere. HyperDASH reads the base file to know what to display and where to save new tasks. The examples are designed like Things 3's onboarding - immediately useful while teaching you the system.

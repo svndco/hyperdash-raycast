@@ -4,8 +4,10 @@ This folder contains a complete onboarding experience to help you get started wi
 
 ## What's Included
 
-- **sample-vault/** - A ready-to-use Obsidian vault with example todos and projects
-- **bases/** - Pre-configured `.base` files for filtering todos and projects
+- **sample-vault/** - A complete, ready-to-use Obsidian vault with:
+  - `.base` files for filtering todos and projects
+  - Example todos and projects organized in folders
+  - Everything you need to get started!
 
 The sample vault includes friendly, interactive examples that demonstrate every feature while being immediately useful. Just like Things 3, these examples help you learn by doing!
 
@@ -15,28 +17,29 @@ The sample vault includes friendly, interactive examples that demonstrate every 
 
 1. Download this `examples/` folder
 2. Open `sample-vault/` directly in Obsidian (File → Open Vault)
-3. Copy the `.base` files from `bases/` into the `sample-vault/` folder
-4. In Raycast preferences, set:
+3. In Raycast preferences, set:
    - Todo Base File: `path/to/sample-vault/hyperdash.base`
    - Project Base File: `path/to/sample-vault/hyperpro.base`
-5. Open Hyperdash in Raycast and explore the examples!
+4. Open Hyperdash in Raycast and explore the examples!
+
+That's it! Everything is already set up and ready to use.
 
 ### Option 2: Add to Existing Vault
 
-1. Copy `sample-vault/todos/` and `sample-vault/projects/` into your existing vault
-2. Copy `bases/` files into your vault (root or anywhere you prefer)
-3. Configure Raycast with paths to your base files
-4. Explore the examples, then customize or delete them
+1. Copy the contents of `sample-vault/` into your existing vault:
+   - `hyperdash.base` and `hyperpro.base` files
+   - `todos/` and `projects/` folders (optional, just examples)
+2. Configure Raycast with paths to your base files
+3. Explore the examples, then customize or delete them
 
 ## File Structure
 
 ```
 examples/
-├── bases/
-│   ├── hyperdash.base                    # Todo filter configuration
-│   └── hyperpro.base                     # Project filter configuration
-└── sample-vault/
-    ├── .obsidian/                        # Required for Obsidian vault
+└── sample-vault/                         # Complete Obsidian vault
+    ├── .obsidian/                        # Obsidian configuration
+    ├── hyperdash.base                    # Todo filter configuration
+    ├── hyperpro.base                     # Project filter configuration
     ├── todos/
     │   ├── explore-hyperdash.md          # Welcome task (high priority, due tomorrow)
     │   ├── plan-weekly-review.md         # In progress, recurring weekly
@@ -49,6 +52,8 @@ examples/
         ├── obsidian-setup.md             # Up next
         └── ideas-backlog.md              # Someday/backlog
 ```
+
+Everything you need is inside the `sample-vault/` folder - just open it in Obsidian and you're ready to go!
 
 ## Base Files Explained
 
@@ -179,12 +184,13 @@ If you DO use TaskNotes or Hyperdash API:
 ## Testing the Examples
 
 1. Download or copy the `examples/` folder
-2. Open `sample-vault/` in Obsidian (it's already a valid vault!)
-3. Copy the `.base` files from `bases/` into `sample-vault/`
-4. Update Raycast preferences (⌘,):
+2. Open `sample-vault/` in Obsidian (it's already a complete vault!)
+3. Update Raycast preferences (⌘,):
    - Todo Base File: `/path/to/sample-vault/hyperdash.base`
    - Project Base File: `/path/to/sample-vault/hyperpro.base`
-5. Open Hyperdash in Raycast and start exploring!
+4. Open Hyperdash in Raycast and start exploring!
+
+No extra setup needed - the base files are already in the vault!
 
 ## Your First Steps
 

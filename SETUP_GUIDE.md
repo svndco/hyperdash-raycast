@@ -16,13 +16,14 @@ Hyperdash works standalone or with Obsidian - your choice!
 
 1. **Download** the [examples folder](examples/)
 2. **Open** `sample-vault/` directly in Obsidian (File → Open Vault)
-3. **Copy** the `.base` files from `examples/bases/` into `sample-vault/`
-4. **Configure** Raycast preferences:
+3. **Configure** Raycast preferences:
    - Todo Base File: `path/to/sample-vault/hyperdash.base`
    - Project Base File: `path/to/sample-vault/hyperpro.base`
    - Todo View Name: `Todo`
    - Project View Name: `All`
-5. **Explore** the example tasks and projects in Raycast!
+4. **Explore** the example tasks and projects in Raycast!
+
+Everything is already set up inside the vault - the `.base` files, folders, and example notes are all there!
 
 Each example demonstrates a feature while being genuinely useful - just like Things 3's excellent onboarding. When you're comfortable, delete the examples and add your own tasks.
 
