@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Color, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Alert, Color, confirmAlert, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, createProjectNote } from "./utils";
 import { readBaseConfig, evaluateWithView } from "./bases";
@@ -474,6 +474,42 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
     }
   }
 
+  async function handleDelete() {
+    try {
+      const confirmed = await confirmAlert({
+        title: "Delete Project",
+        message: `Are you sure you want to delete "${note.title}"?`,
+        primaryAction: {
+          title: "Delete",
+          style: Alert.ActionStyle.Destructive,
+        },
+        dismissAction: {
+          title: "Cancel",
+          style: Alert.ActionStyle.Cancel,
+        },
+      });
+
+      if (!confirmed) return;
+
+      const fs = await import("fs/promises");
+      await fs.unlink(note.path);
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Project Deleted",
+        message: note.title,
+      });
+
+      onRefresh();
+    } catch (error: any) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to delete",
+        message: error.message,
+      });
+    }
+  }
+
   return (
     <List.Item
       title={note.title}
@@ -512,6 +548,12 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               await showToast({ style: Toast.Style.Animated, title: "Rebuilding cache..." });
               await onRebuild();
             }}
+          />
+          <Action
+            title="Delete Project"
+            icon={Icon.Trash}
+            style={Action.Style.Destructive}
+            onAction={handleDelete}
           />
         </ActionPanel>
       }

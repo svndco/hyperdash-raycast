@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Color, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Alert, Color, confirmAlert, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, scanProjects, createProjectNote, createTodoNote } from "./utils";
 import { readBaseConfig, evaluateWithView, type BaseConfig } from "./bases";
@@ -935,6 +935,42 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
     }
   }
 
+  async function handleDelete() {
+    try {
+      const confirmed = await confirmAlert({
+        title: "Delete Note",
+        message: `Are you sure you want to delete "${note.title}"?`,
+        primaryAction: {
+          title: "Delete",
+          style: Alert.ActionStyle.Destructive,
+        },
+        dismissAction: {
+          title: "Cancel",
+          style: Alert.ActionStyle.Cancel,
+        },
+      });
+
+      if (!confirmed) return;
+
+      const fs = await import("fs/promises");
+      await fs.unlink(note.path);
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Note Deleted",
+        message: note.title,
+      });
+
+      onRefresh();
+    } catch (error: any) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to delete",
+        message: error.message,
+      });
+    }
+  }
+
   return (
     <List.Item
       title={note.title}
@@ -978,6 +1014,12 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               await showToast({ style: Toast.Style.Animated, title: "Rebuilding cache..." });
               await onRebuild();
             }}
+          />
+          <Action
+            title="Delete Note"
+            icon={Icon.Trash}
+            style={Action.Style.Destructive}
+            onAction={handleDelete}
           />
         </ActionPanel>
       }
