@@ -4,19 +4,37 @@ Getting started with Hyperdash in Raycast.
 
 ## What you'll need
 
-- An Obsidian vault (just needs a `.obsidian` folder)
+- An Obsidian vault (just needs a `.obsidian` folder) - or create one!
 - Base files (`.base` format) for filtering your todos and projects
 - Markdown notes with YAML frontmatter
 
-Hyperdash works with or without the TaskNotes plugin - just use markdown notes with frontmatter!
+Hyperdash works standalone or with Obsidian - your choice!
 
-## Getting Started
+## The Quick Way (Recommended for New Users)
 
-### Install the Extension
+**Start with our Things 3-style onboarding:**
+
+1. **Download** the [examples folder](examples/)
+2. **Open** `sample-vault/` directly in Obsidian (File → Open Vault)
+3. **Copy** the `.base` files from `examples/bases/` into `sample-vault/`
+4. **Configure** Raycast preferences:
+   - Todo Base File: `path/to/sample-vault/hyperdash.base`
+   - Project Base File: `path/to/sample-vault/hyperpro.base`
+   - Todo View Name: `Todo`
+   - Project View Name: `All`
+5. **Explore** the example tasks and projects in Raycast!
+
+Each example demonstrates a feature while being genuinely useful - just like Things 3's excellent onboarding. When you're comfortable, delete the examples and add your own tasks.
+
+## The Custom Way (For Existing Vaults)
+
+Already have an Obsidian vault? Set it up your way:
+
+### 1. Install the Extension
 
 Grab it from the Raycast Store, or import from the `dist` folder if you're running from source.
 
-### Create Your Base Files
+### 2. Create Your Base Files
 
 Base files tell Hyperdash what to look for. Check out [examples/bases/](examples/bases/) for working examples.
 
@@ -26,7 +44,7 @@ You'll want two base files:
 
 Just drop these `.base` files anywhere in your vault.
 
-### Point Raycast at Your Files
+### 3. Point Raycast at Your Files
 
 Open Raycast preferences and set:
 
@@ -35,21 +53,12 @@ Open Raycast preferences and set:
 - **Todo View Name**: Which view to show (like "Todo" or "Done" - whatever's in your base file)
 - **Project View Name**: Same idea for projects (like "All" or "Current")
 
-### Add Some Notes
+### 4. Add Some Notes
 
-Your notes just need tags and frontmatter. The [examples/sample-vault/](examples/sample-vault/) folder has some to get you started:
+Your notes just need tags and frontmatter. The [examples/sample-vault/](examples/sample-vault/) folder has friendly examples to learn from:
 
 - **Todos**: Tag them with `#todo`, add frontmatter for status, priority, dates
 - **Projects**: Tag them with `#project`, add whatever frontmatter makes sense
-
-## Example Setup
-
-Want to try it out? Download the [examples folder](examples/) and:
-
-1. Copy `examples/sample-vault/` into your Obsidian vault
-2. Copy `examples/bases/` files into your vault
-3. Update the base files to point to your vault path
-4. Configure Raycast preferences to use these base files
 
 ## Base File Format
 

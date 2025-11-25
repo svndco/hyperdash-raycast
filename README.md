@@ -20,9 +20,13 @@ Your lightweight, file-based todo manager in Raycast. Manage tasks and projects 
 
 ## Quick Start
 
-New to Hyperdash? Check out the **[Setup Guide](SETUP_GUIDE.md)** to get rolling.
+**New to Hyperdash?** Start here:
+1. Download the **[examples folder](examples/)** - includes a Things 3-style onboarding experience
+2. Open `sample-vault/` in Obsidian and explore the interactive examples
+3. Each example task demonstrates a different feature while being genuinely useful
+4. When ready, check the **[Setup Guide](SETUP_GUIDE.md)** to customize for your workflow
 
-Want to see it in action first? Grab the **[examples folder](examples/)** with sample base files and notes.
+The examples teach by doing - just like Things 3's excellent first-time experience!
 
 ## Use It Your Way
 
@@ -33,12 +37,13 @@ Use hyperDASH without Obsidian! Just need:
 - Any text editor or sync service (Dropbox, iCloud, Git, etc.)
 
 **Getting Started Standalone:**
-1. Download the default config folder from the **[examples folder](examples/)**
-2. You'll get two `.base` files and folder structure for todos and projects
-3. Point hyperDASH preferences at these base files
-4. Start creating tasks!
+1. Download the **[examples folder](examples/)** - includes ready-to-use sample vault
+2. You'll get interactive example tasks and projects that demonstrate all features
+3. Copy the `.base` files into the sample vault
+4. Point hyperDASH preferences at these base files
+5. Explore the examples, then delete them and add your own tasks!
 
-Your tasks live in simple `.md` files you can edit anywhere. HyperDASH reads the base file to know what to display and where to save new tasks.
+Your tasks live in simple `.md` files you can edit anywhere. HyperDASH reads the base file to know what to display and where to save new tasks. The examples are designed like Things 3's onboarding - immediately useful while teaching you the system.
 
 ### With Obsidian
 Already using Obsidian? Perfect! HyperDASH integrates seamlessly:
