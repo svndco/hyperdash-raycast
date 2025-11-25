@@ -32,6 +32,12 @@ Use hyperDASH without Obsidian! Just need:
 - Markdown files with YAML frontmatter for tasks and projects
 - Any text editor or sync service (Dropbox, iCloud, Git, etc.)
 
+**Getting Started Standalone:**
+1. Download the default config folder from the **[examples folder](examples/)**
+2. You'll get two `.base` files and folder structure for todos and projects
+3. Point hyperDASH preferences at these base files
+4. Start creating tasks!
+
 Your tasks live in simple `.md` files you can edit anywhere. HyperDASH reads the base file to know what to display and where to save new tasks.
 
 ### With Obsidian
