@@ -229,6 +229,10 @@ Want to run the latest development version?
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Contributors
+
+- [Jeremy Allen](https://github.com/jeremysallen) - Creator & Primary Developer
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
