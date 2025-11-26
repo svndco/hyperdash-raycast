@@ -37,12 +37,12 @@ function parseFilterExpression(expr: string): FilterExpression | null {
     const [, property, operator, argsStr] = match;
     // Extract quoted values
     const valueMatches = argsStr.match(/["']([^"']+)["']/g) || [];
-    const values = valueMatches.map(v => v.replace(/["']/g, '').trim());
+    const values = valueMatches.map((v) => v.replace(/["']/g, "").trim());
 
     return {
       property: property.toLowerCase(),
       operator: isNegated ? `!${operator}` : operator,
-      values
+      values,
     };
   }
 
@@ -51,12 +51,12 @@ function parseFilterExpression(expr: string): FilterExpression | null {
   if (eqMatch) {
     const [, property, argsStr] = eqMatch;
     const valueMatches = argsStr.match(/["']([^"']+)["']/g) || [];
-    const values = valueMatches.map(v => v.replace(/["']/g, '').trim());
+    const values = valueMatches.map((v) => v.replace(/["']/g, "").trim());
 
     return {
       property: property.toLowerCase(),
       operator: isNegated ? "!equals" : "equals",
-      values
+      values,
     };
   }
 
@@ -66,7 +66,9 @@ function parseFilterExpression(expr: string): FilterExpression | null {
 /**
  * Read and parse a .base file to extract all filter configurations
  */
-export async function readBaseConfig(filePath: string): Promise<BaseConfig | null> {
+export async function readBaseConfig(
+  filePath: string,
+): Promise<BaseConfig | null> {
   try {
     const raw = await fs.readFile(filePath, "utf8");
     const doc = YAML.parse(raw) as any;
@@ -108,7 +110,10 @@ export async function readBaseConfig(filePath: string): Promise<BaseConfig | nul
               if (parsed) viewFilters.push(parsed);
             }
           }
-        } else if (viewDoc?.filters?.and && Array.isArray(viewDoc.filters.and)) {
+        } else if (
+          viewDoc?.filters?.and &&
+          Array.isArray(viewDoc.filters.and)
+        ) {
           viewCombineWith = "and";
           for (const item of viewDoc.filters.and) {
             if (typeof item === "string") {
@@ -123,7 +128,7 @@ export async function readBaseConfig(filePath: string): Promise<BaseConfig | nul
             name: viewDoc.name,
             type: viewDoc.type || "table",
             filters: viewFilters,
-            combineWith: viewCombineWith
+            combineWith: viewCombineWith,
           });
         }
       }
@@ -136,7 +141,7 @@ export async function readBaseConfig(filePath: string): Promise<BaseConfig | nul
       filters,
       combineWith,
       vaultPath: vaultPath || undefined,
-      views
+      views,
     };
   } catch {
     return null;
@@ -195,32 +200,40 @@ export function evaluateFilter(filter: FilterExpression, note: any): boolean {
 
   // Convert noteValue to array for consistent handling
   const noteValues = Array.isArray(noteValue)
-    ? noteValue.map(v => String(v).toLowerCase())
+    ? noteValue.map((v) => String(v).toLowerCase())
     : noteValue
       ? [String(noteValue).toLowerCase()]
       : [];
 
-  const filterValues = values.map(v => v.toLowerCase());
+  const filterValues = values.map((v) => v.toLowerCase());
 
   // Apply operator
   switch (operator.toLowerCase()) {
     case "contains":
-      return filterValues.some(fv => noteValues.some(nv => nv.includes(fv)));
+      return filterValues.some((fv) =>
+        noteValues.some((nv) => nv.includes(fv)),
+      );
 
     case "!contains":
-      return !filterValues.some(fv => noteValues.some(nv => nv.includes(fv)));
+      return !filterValues.some((fv) =>
+        noteValues.some((nv) => nv.includes(fv)),
+      );
 
     case "containsany":
-      return filterValues.some(fv => noteValues.some(nv => nv.includes(fv)));
+      return filterValues.some((fv) =>
+        noteValues.some((nv) => nv.includes(fv)),
+      );
 
     case "!containsany":
-      return !filterValues.some(fv => noteValues.some(nv => nv.includes(fv)));
+      return !filterValues.some((fv) =>
+        noteValues.some((nv) => nv.includes(fv)),
+      );
 
     case "equals":
-      return filterValues.some(fv => noteValues.includes(fv));
+      return filterValues.some((fv) => noteValues.includes(fv));
 
     case "!equals":
-      return !filterValues.some(fv => noteValues.includes(fv));
+      return !filterValues.some((fv) => noteValues.includes(fv));
 
     default:
       return false;
@@ -234,9 +247,9 @@ export function evaluateAllFilters(config: BaseConfig, note: any): boolean {
   if (config.filters.length === 0) return true;
 
   if (config.combineWith === "and") {
-    return config.filters.every(filter => evaluateFilter(filter, note));
+    return config.filters.every((filter) => evaluateFilter(filter, note));
   } else {
-    return config.filters.some(filter => evaluateFilter(filter, note));
+    return config.filters.some((filter) => evaluateFilter(filter, note));
   }
 }
 
@@ -247,9 +260,9 @@ export function evaluateViewFilters(view: BaseView, note: any): boolean {
   if (view.filters.length === 0) return true;
 
   if (view.combineWith === "and") {
-    return view.filters.every(filter => evaluateFilter(filter, note));
+    return view.filters.every((filter) => evaluateFilter(filter, note));
   } else {
-    return view.filters.some(filter => evaluateFilter(filter, note));
+    return view.filters.some((filter) => evaluateFilter(filter, note));
   }
 }
 
@@ -257,7 +270,11 @@ export function evaluateViewFilters(view: BaseView, note: any): boolean {
  * Evaluate base config with an optional view
  * Note must match BOTH base filters AND view filters (if view is specified)
  */
-export function evaluateWithView(config: BaseConfig, note: any, viewName?: string): boolean {
+export function evaluateWithView(
+  config: BaseConfig,
+  note: any,
+  viewName?: string,
+): boolean {
   // First check base filters
   const matchesBase = evaluateAllFilters(config, note);
   if (!matchesBase) return false;
@@ -266,21 +283,23 @@ export function evaluateWithView(config: BaseConfig, note: any, viewName?: strin
   if (!viewName) return true;
 
   // Find and apply view filters
-  const view = config.views.find(v => v.name === viewName);
+  const view = config.views.find((v) => v.name === viewName);
   if (!view) return true; // View not found, just use base filters
 
   return evaluateViewFilters(view, note);
 }
 
 // Legacy function for backwards compatibility
-export async function readBasesTag(filePath: string): Promise<string | undefined> {
+export async function readBasesTag(
+  filePath: string,
+): Promise<string | undefined> {
   const config = await readBaseConfig(filePath);
   if (!config) return undefined;
 
   // Extract tags from tag-based filters
-  const tagFilters = config.filters.filter(f => f.property === "tags");
+  const tagFilters = config.filters.filter((f) => f.property === "tags");
   if (tagFilters.length === 0) return undefined;
 
-  const allTags = tagFilters.flatMap(f => f.values);
-  return allTags.map(t => t.toLowerCase()).join(', ');
+  const allTags = tagFilters.flatMap((f) => f.values);
+  return allTags.map((t) => t.toLowerCase()).join(", ");
 }

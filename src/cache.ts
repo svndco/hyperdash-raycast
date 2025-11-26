@@ -42,7 +42,10 @@ export function getCachedNotes(vaultPath: string): Note[] | null {
 /**
  * Check if cache is fresh
  */
-export function isCacheFresh(vaultPath: string, maxAge: number = DEFAULT_TTL): boolean {
+export function isCacheFresh(
+  vaultPath: string,
+  maxAge: number = DEFAULT_TTL,
+): boolean {
   const timestampKey = getCacheKey(vaultPath, "timestamp");
   const timestamp = cache.get(timestampKey);
 

@@ -1,6 +1,31 @@
-import { Action, ActionPanel, Alert, Color, confirmAlert, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Alert,
+  Color,
+  confirmAlert,
+  Form,
+  Icon,
+  List,
+  getPreferenceValues,
+  showToast,
+  Toast,
+  useNavigation,
+} from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNoteProject, updateNotePriority, updateNoteTitle, scanProjects, createProjectNote, createTodoNote } from "./utils";
+import {
+  scanVault,
+  type Note,
+  sortByMtimeDesc,
+  updateNoteStatus,
+  updateNoteDate,
+  updateNoteProject,
+  updateNotePriority,
+  updateNoteTitle,
+  scanProjects,
+  createProjectNote,
+  createTodoNote,
+} from "./utils";
 import { readBaseConfig, evaluateWithView, type BaseConfig } from "./bases";
 import { clearVaultCache } from "./cache";
 import path from "path";
@@ -20,13 +45,13 @@ function formatDate(dateStr: string): string {
   try {
     // Parse as local date to avoid timezone issues
     // Split "2025-10-26" into [2025, 10, 26]
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1; // months are 0-indexed
       const day = parseInt(parts[2], 10);
       const date = new Date(year, month, day);
-      const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+      const monthStr = date.toLocaleDateString("en-US", { month: "short" });
       return `${monthStr} ${day}`;
     }
     return dateStr;
@@ -37,7 +62,7 @@ function formatDate(dateStr: string): string {
 
 function isOverdue(dateStr: string): boolean {
   try {
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
@@ -55,7 +80,7 @@ function isOverdue(dateStr: string): boolean {
 
 function isToday(dateStr: string): boolean {
   try {
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
@@ -91,13 +116,19 @@ export default function Command() {
 
       // Validate required fields
       if (!prefs.basesTodoFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Todo Base File in Preferences" });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Set Todo Base File in Preferences",
+        });
         setNotes([]);
         return;
       }
 
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Project Base File in Preferences" });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Set Project Base File in Preferences",
+        });
         setNotes([]);
         return;
       }
@@ -105,7 +136,7 @@ export default function Command() {
       // Read configurations from Base files
       const [todoConfig, projectConfig] = await Promise.all([
         readBaseConfig(prefs.basesTodoFile.trim()),
-        readBaseConfig(prefs.basesProjectFile.trim())
+        readBaseConfig(prefs.basesProjectFile.trim()),
       ]);
 
       // Validate that Base files were parsed successfully
@@ -113,7 +144,7 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to parse Todo Base file",
-          message: "Check that your base file is valid YAML"
+          message: "Check that your base file is valid YAML",
         });
         setNotes([]);
         return;
@@ -123,7 +154,7 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to parse Project Base file",
-          message: "Check that your base file is valid YAML"
+          message: "Check that your base file is valid YAML",
         });
         setNotes([]);
         return;
@@ -134,7 +165,8 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Could not find vault for Todo Base file",
-          message: "Make sure your .base file is inside an Obsidian vault with .obsidian folder"
+          message:
+            "Make sure your .base file is inside an Obsidian vault with .obsidian folder",
         });
         setNotes([]);
         return;
@@ -144,18 +176,28 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Could not find vault for Project Base file",
-          message: "Make sure your .base file is inside an Obsidian vault with .obsidian folder"
+          message:
+            "Make sure your .base file is inside an Obsidian vault with .obsidian folder",
         });
         setNotes([]);
         return;
       }
 
       // Display effective filter info
-      const todoTagFilters = todoConfig.filters.filter(f => f.property === "tags");
-      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
+      const todoTagFilters = todoConfig.filters.filter(
+        (f) => f.property === "tags",
+      );
+      const projectTagFilters = projectConfig.filters.filter(
+        (f) => f.property === "tags",
+      );
 
-      setEffectiveTodo(todoTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
-      setEffectiveProject(projectTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
+      setEffectiveTodo(
+        todoTagFilters.flatMap((f) => f.values).join(", ") || "dynamic filters",
+      );
+      setEffectiveProject(
+        projectTagFilters.flatMap((f) => f.values).join(", ") ||
+          "dynamic filters",
+      );
 
       // Scan the vault with inline filtering
       const todoViewName = prefs.todoViewName.trim();
@@ -164,7 +206,11 @@ export default function Command() {
       const filterFn = (note: any) => {
         // Apply filters during scan to avoid loading all files into memory
         const matchesTodo = evaluateWithView(todoConfig, note, todoViewName);
-        const matchesProject = evaluateWithView(projectConfig, note, projectViewName);
+        const matchesProject = evaluateWithView(
+          projectConfig,
+          note,
+          projectViewName,
+        );
 
         // Only keep notes that match either filter
         if (!matchesTodo && !matchesProject) return null;
@@ -172,7 +218,7 @@ export default function Command() {
         return {
           ...note,
           hasTodoTag: matchesTodo,
-          hasProjectTag: matchesProject
+          hasProjectTag: matchesProject,
         };
       };
 
@@ -182,17 +228,17 @@ export default function Command() {
       }
 
       // Extract tags from base configs for early filtering
-      const todoTags = todoTagFilters.flatMap(f => f.values);
-      const projectTags = projectTagFilters.flatMap(f => f.values);
+      const todoTags = todoTagFilters.flatMap((f) => f.values);
+      const projectTags = projectTagFilters.flatMap((f) => f.values);
 
       // Scan vault with Raycast Cache enabled
       const scanned = await scanVault({
         vaultPath: todoConfig.vaultPath,
         todoTags,
         projectTags,
-        useCache: true,  // ✅ Enable Raycast Cache API
+        useCache: true, // ✅ Enable Raycast Cache API
         filterFn,
-        maxAge: 5 * 60 * 1000  // 5 minutes
+        maxAge: 5 * 60 * 1000, // 5 minutes
       });
 
       // Update UI first (fast!)
@@ -201,15 +247,19 @@ export default function Command() {
       setLoadingRef(false);
 
       // Fire-and-forget toast (non-blocking, won't be cancelled)
-      const todoCount = scanned.filter(n => n.hasTodoTag).length;
-      const projectCount = scanned.filter(n => n.hasProjectTag).length;
+      const todoCount = scanned.filter((n) => n.hasTodoTag).length;
+      const projectCount = scanned.filter((n) => n.hasProjectTag).length;
       void showToast({
         style: Toast.Style.Success,
         title: `✓ Loaded ${scanned.length} notes`,
-        message: `${todoCount} todos, ${projectCount} projects`
+        message: `${todoCount} todos, ${projectCount} projects`,
       });
     } catch (e: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to load", message: String(e?.message ?? e) });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to load",
+        message: String(e?.message ?? e),
+      });
       setIsLoading(false);
       setLoadingRef(false);
     }
@@ -225,7 +275,10 @@ export default function Command() {
 
     try {
       if (!prefs.basesTodoFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Todo Base file not set" });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Todo Base file not set",
+        });
         return;
       }
 
@@ -236,37 +289,50 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to parse Todo Base file",
-          message: "Check that your base file is valid and in an Obsidian vault"
+          message:
+            "Check that your base file is valid and in an Obsidian vault",
         });
         return;
       }
 
       // Extract all tags from tag filters
-      const todoTagFilters = todoConfig.filters.filter(f => f.property === "tags");
-      if (todoTagFilters.length === 0 || todoTagFilters[0].values.length === 0) {
+      const todoTagFilters = todoConfig.filters.filter(
+        (f) => f.property === "tags",
+      );
+      if (
+        todoTagFilters.length === 0 ||
+        todoTagFilters[0].values.length === 0
+      ) {
         await showToast({
           style: Toast.Style.Failure,
           title: "No tags found in Todo Base file",
-          message: "Base file must contain at least one tag filter"
+          message: "Base file must contain at least one tag filter",
         });
         return;
       }
 
-      const todoTags = todoTagFilters.flatMap(f => f.values);
+      const todoTags = todoTagFilters.flatMap((f) => f.values);
 
       // Create new todo note (pass cached notes for fast folder detection)
-      const newNotePath = await createTodoNote(todoConfig.vaultPath, searchText.trim(), todoTags, undefined, undefined, notes);
+      const newNotePath = await createTodoNote(
+        todoConfig.vaultPath,
+        searchText.trim(),
+        todoTags,
+        undefined,
+        undefined,
+        notes,
+      );
 
       // Create a Note object for the new todo to add to state immediately
       const newNote: Note = {
         title: searchText.trim(),
         path: newNotePath,
-        relativePath: newNotePath.replace(todoConfig.vaultPath + '/', ''),
-        tags: todoTags.map(t => t.toLowerCase()),
+        relativePath: newNotePath.replace(todoConfig.vaultPath + "/", ""),
+        tags: todoTags.map((t) => t.toLowerCase()),
         mtimeMs: Date.now(),
         hasTodoTag: true,
         hasProjectTag: false,
-        status: 'todo',
+        status: "todo",
         project: undefined,
         dateDue: undefined,
         dateStarted: undefined,
@@ -275,7 +341,7 @@ export default function Command() {
         recurrenceAnchor: undefined,
         priority: undefined,
         timeTracked: 0,
-        timeEstimate: 0
+        timeEstimate: 0,
       };
 
       // Add the new note to the current notes state immediately
@@ -284,7 +350,7 @@ export default function Command() {
       await showToast({
         style: Toast.Style.Success,
         title: "Todo Created",
-        message: searchText.trim()
+        message: searchText.trim(),
       });
 
       // Clear search
@@ -293,7 +359,11 @@ export default function Command() {
       // Clear cache in background so next reload gets fresh data
       clearVaultCache(todoConfig.vaultPath);
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to create todo", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to create todo",
+        message: error.message,
+      });
     }
   }
 
@@ -308,7 +378,9 @@ export default function Command() {
     let filtered = todos;
     if (searchText.trim()) {
       const searchLower = searchText.trim().toLowerCase();
-      filtered = todos.filter((n) => n.title.toLowerCase().includes(searchLower));
+      filtered = todos.filter((n) =>
+        n.title.toLowerCase().includes(searchLower),
+      );
     }
 
     // Sort by priority (alphabetical), then by due date, then by mtime
@@ -335,18 +407,61 @@ export default function Command() {
     return filtered.slice(0, maxResults);
   }, [todos, searchText]);
 
-  const inProgress = useMemo(() => filteredTodos.filter((n) => n.status === "in-progress").sort(sortByMtimeDesc), [filteredTodos]);
-  const upNext = useMemo(() => filteredTodos.filter((n) => n.status === "next" || n.status === "up next").sort(sortByMtimeDesc), [filteredTodos]);
-  const todoItems = useMemo(() => filteredTodos.filter((n) => n.status === "todo" || n.status === "not started" || n.status === "open" || !n.status).sort(sortByMtimeDesc), [filteredTodos]);
-  const holdStuck = useMemo(() => filteredTodos.filter((n) => n.status === "hold/stuck" || n.status === "stuck" || n.status === "hold").sort(sortByMtimeDesc), [filteredTodos]);
-  const waiting = useMemo(() => filteredTodos.filter((n) => n.status === "waiting").sort(sortByMtimeDesc), [filteredTodos]);
-  const someday = useMemo(() => filteredTodos.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredTodos]);
+  const inProgress = useMemo(
+    () =>
+      filteredTodos
+        .filter((n) => n.status === "in-progress")
+        .sort(sortByMtimeDesc),
+    [filteredTodos],
+  );
+  const upNext = useMemo(
+    () =>
+      filteredTodos
+        .filter((n) => n.status === "next" || n.status === "up next")
+        .sort(sortByMtimeDesc),
+    [filteredTodos],
+  );
+  const todoItems = useMemo(
+    () =>
+      filteredTodos
+        .filter(
+          (n) =>
+            n.status === "todo" ||
+            n.status === "not started" ||
+            n.status === "open" ||
+            !n.status,
+        )
+        .sort(sortByMtimeDesc),
+    [filteredTodos],
+  );
+  const holdStuck = useMemo(
+    () =>
+      filteredTodos
+        .filter(
+          (n) =>
+            n.status === "hold/stuck" ||
+            n.status === "stuck" ||
+            n.status === "hold",
+        )
+        .sort(sortByMtimeDesc),
+    [filteredTodos],
+  );
+  const waiting = useMemo(
+    () =>
+      filteredTodos.filter((n) => n.status === "waiting").sort(sortByMtimeDesc),
+    [filteredTodos],
+  );
+  const someday = useMemo(
+    () =>
+      filteredTodos.filter((n) => n.status === "someday").sort(sortByMtimeDesc),
+    [filteredTodos],
+  );
 
   // Check if search text exactly matches any existing todo
   const showCreateOption = useMemo(() => {
     if (!searchText.trim()) return false;
     const searchLower = searchText.trim().toLowerCase();
-    return !todos.some(todo => todo.title.toLowerCase() === searchLower);
+    return !todos.some((todo) => todo.title.toLowerCase() === searchLower);
   }, [searchText, todos]);
 
   return (
@@ -380,44 +495,92 @@ export default function Command() {
         </List.Section>
       )}
       {inProgress.length > 0 && (
-        <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
+        <List.Section
+          title={`In Progress (${inProgress.length})`}
+          subtitle="status: in-progress"
+        >
           {inProgress.map((n) => (
-            <NoteItem key={`inprogress-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <NoteItem
+              key={`inprogress-${n.path}`}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {upNext.length > 0 && (
-        <List.Section title={`Up Next (${upNext.length})`} subtitle="status: next">
+        <List.Section
+          title={`Up Next (${upNext.length})`}
+          subtitle="status: next"
+        >
           {upNext.map((n) => (
-            <NoteItem key={`upnext-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <NoteItem
+              key={`upnext-${n.path}`}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {todoItems.length > 0 && (
-        <List.Section title={`Todo (${todoItems.length})`} subtitle="status: todo">
+        <List.Section
+          title={`Todo (${todoItems.length})`}
+          subtitle="status: todo"
+        >
           {todoItems.map((n) => (
-            <NoteItem key={`todo-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <NoteItem
+              key={`todo-${n.path}`}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {holdStuck.length > 0 && (
-        <List.Section title={`Hold/Stuck (${holdStuck.length})`} subtitle="status: hold/stuck">
+        <List.Section
+          title={`Hold/Stuck (${holdStuck.length})`}
+          subtitle="status: hold/stuck"
+        >
           {holdStuck.map((n) => (
-            <NoteItem key={`hold-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <NoteItem
+              key={`hold-${n.path}`}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {waiting.length > 0 && (
-        <List.Section title={`Waiting (${waiting.length})`} subtitle="status: waiting">
+        <List.Section
+          title={`Waiting (${waiting.length})`}
+          subtitle="status: waiting"
+        >
           {waiting.map((n) => (
-            <NoteItem key={`waiting-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <NoteItem
+              key={`waiting-${n.path}`}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {someday.length > 0 && (
-        <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
+        <List.Section
+          title={`Someday (${someday.length})`}
+          subtitle="status: someday"
+        >
           {someday.map((n) => (
-            <NoteItem key={`someday-${n.path}`} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <NoteItem
+              key={`someday-${n.path}`}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
@@ -441,7 +604,13 @@ export default function Command() {
   );
 }
 
-function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated: () => void }) {
+function SetStatusForm({
+  note,
+  onStatusUpdated,
+}: {
+  note: Note;
+  onStatusUpdated: () => void;
+}) {
   const { pop } = useNavigation();
   const statuses = [
     { value: "todo", title: "Todo", icon: Icon.Circle },
@@ -451,7 +620,7 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
     { value: "waiting", title: "Waiting", icon: Icon.Clock },
     { value: "someday", title: "Someday", icon: Icon.Calendar },
     { value: "done", title: "Done", icon: Icon.CheckCircle },
-    { value: "canceled", title: "Canceled", icon: Icon.XMarkCircle }
+    { value: "canceled", title: "Canceled", icon: Icon.XMarkCircle },
   ];
 
   async function handleStatusChange(newStatus: string) {
@@ -460,17 +629,24 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
       await showToast({
         style: Toast.Style.Success,
         title: `Set Status: ${newStatus}`,
-        message: note.title
+        message: note.title,
       });
       onStatusUpdated();
       pop(); // Close the form and return to the main list
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to update",
+        message: error.message,
+      });
     }
   }
 
   return (
-    <List navigationTitle={`Set Status: ${note.title}`} searchBarPlaceholder="Choose new status...">
+    <List
+      navigationTitle={`Set Status: ${note.title}`}
+      searchBarPlaceholder="Choose new status..."
+    >
       <List.Section title={`Current: ${note.status || "none"}`}>
         {statuses.map((s) => (
           <List.Item
@@ -494,7 +670,13 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
   );
 }
 
-function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdated: () => void }) {
+function SetProjectForm({
+  note,
+  onProjectUpdated,
+}: {
+  note: Note;
+  onProjectUpdated: () => void;
+}) {
   const { pop } = useNavigation();
   const prefs = getPreferenceValues<Prefs>();
   const [isLoading, setIsLoading] = useState(true);
@@ -505,25 +687,35 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
     async function loadProjects() {
       try {
         if (!prefs.basesProjectFile?.trim()) {
-          await showToast({ style: Toast.Style.Failure, title: "Project Base file not set" });
+          await showToast({
+            style: Toast.Style.Failure,
+            title: "Project Base file not set",
+          });
           return;
         }
 
         // Get project config from base file
-        const projectConfig = await readBaseConfig(prefs.basesProjectFile.trim());
+        const projectConfig = await readBaseConfig(
+          prefs.basesProjectFile.trim(),
+        );
 
         if (!projectConfig || !projectConfig.vaultPath) {
           await showToast({
             style: Toast.Style.Failure,
             title: "Failed to parse Project Base file",
-            message: "Check that your base file is valid and in an Obsidian vault"
+            message:
+              "Check that your base file is valid and in an Obsidian vault",
           });
           return;
         }
 
         // Extract tags from project filters
-        const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
-        const projectTags = projectTagFilters.flatMap(f => f.values.map(v => v.toLowerCase()));
+        const projectTagFilters = projectConfig.filters.filter(
+          (f) => f.property === "tags",
+        );
+        const projectTags = projectTagFilters.flatMap((f) =>
+          f.values.map((v) => v.toLowerCase()),
+        );
 
         // Use cached vault scan with filter instead of scanProjects
         const projectViewName = prefs.projectViewName?.trim() || "";
@@ -539,13 +731,17 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
           projectTags,
           useCache: true,
           filterFn,
-          maxAge: 5 * 60 * 1000
+          maxAge: 5 * 60 * 1000,
         });
 
-        const notes = scanned.filter(n => n.hasProjectTag);
+        const notes = scanned.filter((n) => n.hasProjectTag);
         setProjectNotes(notes);
       } catch (error: any) {
-        await showToast({ style: Toast.Style.Failure, title: "Failed to load projects", message: error.message });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to load projects",
+          message: error.message,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -557,23 +753,87 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   const filteredProjects = useMemo(() => {
     if (!searchText.trim()) return projectNotes;
     const searchLower = searchText.trim().toLowerCase();
-    return projectNotes.filter((proj) => proj.title.toLowerCase().includes(searchLower));
+    return projectNotes.filter((proj) =>
+      proj.title.toLowerCase().includes(searchLower),
+    );
   }, [projectNotes, searchText]);
 
   // Group by status
-  const planning = useMemo(() => filteredProjects.filter((n) => n.status === "planning").sort(sortByMtimeDesc), [filteredProjects]);
-  const research = useMemo(() => filteredProjects.filter((n) => n.status === "research").sort(sortByMtimeDesc), [filteredProjects]);
-  const upNext = useMemo(() => filteredProjects.filter((n) => n.status === "up-next" || n.status === "up next").sort(sortByMtimeDesc), [filteredProjects]);
-  const inProgress = useMemo(() => filteredProjects.filter((n) => n.status === "in-progress" || n.status === "active").sort(sortByMtimeDesc), [filteredProjects]);
-  const onHold = useMemo(() => filteredProjects.filter((n) => n.status === "on-hold" || n.status === "hold" || n.status === "paused").sort(sortByMtimeDesc), [filteredProjects]);
-  const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
-  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
+  const planning = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "planning")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const research = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "research")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const upNext = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "up-next" || n.status === "up next")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const inProgress = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "in-progress" || n.status === "active")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const onHold = useMemo(
+    () =>
+      filteredProjects
+        .filter(
+          (n) =>
+            n.status === "on-hold" ||
+            n.status === "hold" ||
+            n.status === "paused",
+        )
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const someday = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "someday")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const other = useMemo(
+    () =>
+      filteredProjects
+        .filter(
+          (n) =>
+            !n.status ||
+            (n.status !== "planning" &&
+              n.status !== "research" &&
+              n.status !== "up-next" &&
+              n.status !== "up next" &&
+              n.status !== "in-progress" &&
+              n.status !== "active" &&
+              n.status !== "on-hold" &&
+              n.status !== "hold" &&
+              n.status !== "paused" &&
+              n.status !== "someday"),
+        )
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
 
   // Check if search text exactly matches any existing project
   const showCreateOption = useMemo(() => {
     if (!searchText.trim()) return false;
     const searchLower = searchText.trim().toLowerCase();
-    return !projectNotes.some(proj => proj.title.toLowerCase() === searchLower);
+    return !projectNotes.some(
+      (proj) => proj.title.toLowerCase() === searchLower,
+    );
   }, [searchText, projectNotes]);
 
   async function handleSelectProject(projectName: string) {
@@ -582,12 +842,16 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       await showToast({
         style: Toast.Style.Success,
         title: "Project Set",
-        message: note.title
+        message: note.title,
       });
       onProjectUpdated();
       pop();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to update",
+        message: error.message,
+      });
     }
   }
 
@@ -596,7 +860,10 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
 
     try {
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Project Base file not set" });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Project Base file not set",
+        });
         return;
       }
 
@@ -607,26 +874,36 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to parse Project Base file",
-          message: "Check that your base file is valid and in an Obsidian vault"
+          message:
+            "Check that your base file is valid and in an Obsidian vault",
         });
         return;
       }
 
       // Extract all tags from tag filters
-      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
-      if (projectTagFilters.length === 0 || projectTagFilters[0].values.length === 0) {
+      const projectTagFilters = projectConfig.filters.filter(
+        (f) => f.property === "tags",
+      );
+      if (
+        projectTagFilters.length === 0 ||
+        projectTagFilters[0].values.length === 0
+      ) {
         await showToast({
           style: Toast.Style.Failure,
           title: "No tags found in Project Base file",
-          message: "Base file must contain at least one tag filter"
+          message: "Base file must contain at least one tag filter",
         });
         return;
       }
 
-      const projectTags = projectTagFilters.flatMap(f => f.values);
+      const projectTags = projectTagFilters.flatMap((f) => f.values);
 
       // Create new project note (no dates - set later via actions)
-      await createProjectNote(projectConfig.vaultPath, searchText.trim(), projectTags);
+      await createProjectNote(
+        projectConfig.vaultPath,
+        searchText.trim(),
+        projectTags,
+      );
 
       // Set it on the todo
       await updateNoteProject(note.path, searchText.trim());
@@ -634,12 +911,16 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       await showToast({
         style: Toast.Style.Success,
         title: "Project Created & Set",
-        message: note.title
+        message: note.title,
       });
       onProjectUpdated();
       pop();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to create project", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to create project",
+        message: error.message,
+      });
     }
   }
 
@@ -649,12 +930,16 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       await showToast({
         style: Toast.Style.Success,
         title: "Project Cleared",
-        message: note.title
+        message: note.title,
       });
       onProjectUpdated();
       pop();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to clear", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to clear",
+        message: error.message,
+      });
     }
   }
 
@@ -664,7 +949,7 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
       navigationTitle={`Set Project: ${note.title}`}
       searchBarPlaceholder="Type @project or search..."
       onSearchTextChange={(text) => {
-        const cleanText = text.startsWith('@') ? text.slice(1) : text;
+        const cleanText = text.startsWith("@") ? text.slice(1) : text;
         setSearchText(cleanText);
       }}
       searchText={searchText}
@@ -710,7 +995,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -731,7 +1018,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -752,7 +1041,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -773,7 +1064,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -794,7 +1087,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -815,7 +1110,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -836,7 +1133,9 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
               key={proj.path}
               title={proj.title}
               icon={Icon.Folder}
-              accessories={proj.title === note.project ? [{ text: "Current" }] : []}
+              accessories={
+                proj.title === note.project ? [{ text: "Current" }] : []
+              }
               actions={
                 <ActionPanel>
                   <Action
@@ -854,7 +1153,13 @@ function SetProjectForm({ note, onProjectUpdated }: { note: Note; onProjectUpdat
   );
 }
 
-function EditTitleForm({ note, onTitleUpdated }: { note: Note; onTitleUpdated: () => void }) {
+function EditTitleForm({
+  note,
+  onTitleUpdated,
+}: {
+  note: Note;
+  onTitleUpdated: () => void;
+}) {
   const { pop } = useNavigation();
   const [title, setTitle] = useState(note.title);
 
@@ -895,7 +1200,15 @@ function EditTitleForm({ note, onTitleUpdated }: { note: Note; onTitleUpdated: (
   );
 }
 
-function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () => void; onRebuild: () => void }) {
+function NoteItem({
+  note,
+  onRefresh,
+  onRebuild,
+}: {
+  note: Note;
+  onRefresh: () => void;
+  onRebuild: () => void;
+}) {
   const prefs = getPreferenceValues<Prefs>();
   const accessories = [];
 
@@ -916,23 +1229,31 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
     }
     accessories.push({
       text: formatDate(note.dateDue),
-      icon: { source: Icon.Calendar, tintColor: iconColor }
+      icon: { source: Icon.Calendar, tintColor: iconColor },
     });
   }
 
   // Recurrence info
   if (prefs.showRecurrence !== false && note.recurrence) {
-    const recurrenceIcon = note.recurrenceAnchor === "completion" ? Icon.Repeat : Icon.Calendar;
-    accessories.push({ text: note.recurrence, icon: recurrenceIcon, tooltip: note.recurrenceAnchor ? `Recurs from ${note.recurrenceAnchor}` : undefined });
+    const recurrenceIcon =
+      note.recurrenceAnchor === "completion" ? Icon.Repeat : Icon.Calendar;
+    accessories.push({
+      text: note.recurrence,
+      icon: recurrenceIcon,
+      tooltip: note.recurrenceAnchor
+        ? `Recurs from ${note.recurrenceAnchor}`
+        : undefined,
+    });
   }
 
   // Time tracking
   if (prefs.showTimeTracking && (note.timeTracked || note.timeEstimate)) {
-    const timeText = note.timeTracked && note.timeEstimate
-      ? `${note.timeTracked}h / ${note.timeEstimate}h`
-      : note.timeTracked
-        ? `${note.timeTracked}h tracked`
-        : `${note.timeEstimate}h est`;
+    const timeText =
+      note.timeTracked && note.timeEstimate
+        ? `${note.timeTracked}h / ${note.timeEstimate}h`
+        : note.timeTracked
+          ? `${note.timeTracked}h tracked`
+          : `${note.timeEstimate}h est`;
     accessories.push({ text: timeText, icon: Icon.Clock });
   }
 
@@ -952,7 +1273,11 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
     itemIcon = Icon.CircleProgress;
   } else if (note.status === "next" || note.status === "up next") {
     itemIcon = Icon.ArrowRight;
-  } else if (note.status === "hold/stuck" || note.status === "stuck" || note.status === "hold") {
+  } else if (
+    note.status === "hold/stuck" ||
+    note.status === "stuck" ||
+    note.status === "hold"
+  ) {
     itemIcon = Icon.Pause;
   } else if (note.status === "waiting") {
     itemIcon = Icon.Clock;
@@ -964,18 +1289,26 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
     itemIcon = Icon.XMarkCircle;
   }
 
-  async function handleDateChange(field: string, fieldLabel: string, date: Date | null) {
+  async function handleDateChange(
+    field: string,
+    fieldLabel: string,
+    date: Date | null,
+  ) {
     try {
       await updateNoteDate(note.path, field, date);
       const message = date ? `Set to: ${date.toLocaleDateString()}` : "Cleared";
       await showToast({
         style: Toast.Style.Success,
         title: `${fieldLabel} Updated`,
-        message: note.title
+        message: note.title,
       });
       onRefresh();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to update",
+        message: error.message,
+      });
     }
   }
 
@@ -1043,7 +1376,11 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               icon={Icon.ExclamationMark}
               onAction={async () => {
                 await updateNotePriority(note.path, "1-urgent");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "1 - Urgent" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "1 - Urgent",
+                });
                 onRefresh();
               }}
             />
@@ -1052,7 +1389,11 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               icon={Icon.Flag}
               onAction={async () => {
                 await updateNotePriority(note.path, "2-high");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "2 - High" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "2 - High",
+                });
                 onRefresh();
               }}
             />
@@ -1061,7 +1402,11 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               icon={Icon.Circle}
               onAction={async () => {
                 await updateNotePriority(note.path, "3-medium");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "3 - Medium" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "3 - Medium",
+                });
                 onRefresh();
               }}
             />
@@ -1070,7 +1415,11 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               icon={Icon.Minus}
               onAction={async () => {
                 await updateNotePriority(note.path, "4-low");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "4 - Low" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "4 - Low",
+                });
                 onRefresh();
               }}
             />
@@ -1079,7 +1428,10 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               icon={Icon.XMarkCircle}
               onAction={async () => {
                 await updateNotePriority(note.path, "");
-                await showToast({ style: Toast.Style.Success, title: "Priority Cleared" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Cleared",
+                });
                 onRefresh();
               }}
             />
@@ -1092,7 +1444,9 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
           <Action.PickDate
             title="Set Start Date"
             icon={Icon.PlayFilled}
-            onChange={(date) => handleDateChange("date_started", "Start Date", date)}
+            onChange={(date) =>
+              handleDateChange("date_started", "Start Date", date)
+            }
           />
           <Action
             title="Mark as Done"
@@ -1103,7 +1457,7 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
               await showToast({
                 style: Toast.Style.Success,
                 title: "Marked as Done",
-                message: note.title
+                message: note.title,
               });
               onRefresh();
             }}
@@ -1115,13 +1469,21 @@ function NoteItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () =>
           />
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
-          <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
+          <Action
+            title="Refresh"
+            icon={Icon.RotateClockwise}
+            shortcut={{ modifiers: ["cmd"], key: "r" }}
+            onAction={onRefresh}
+          />
           <Action
             title="Rebuild Cache"
             icon={Icon.ArrowClockwise}
             shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
             onAction={async () => {
-              await showToast({ style: Toast.Style.Animated, title: "Rebuilding cache..." });
+              await showToast({
+                style: Toast.Style.Animated,
+                title: "Rebuilding cache...",
+              });
               await onRebuild();
             }}
           />

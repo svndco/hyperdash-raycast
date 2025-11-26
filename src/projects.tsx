@@ -1,6 +1,28 @@
-import { Action, ActionPanel, Alert, Color, confirmAlert, Form, Icon, List, getPreferenceValues, showToast, Toast, useNavigation } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Alert,
+  Color,
+  confirmAlert,
+  Form,
+  Icon,
+  List,
+  getPreferenceValues,
+  showToast,
+  Toast,
+  useNavigation,
+} from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { scanVault, type Note, sortByMtimeDesc, updateNoteStatus, updateNoteDate, updateNotePriority, updateNoteTitle, createProjectNote } from "./utils";
+import {
+  scanVault,
+  type Note,
+  sortByMtimeDesc,
+  updateNoteStatus,
+  updateNoteDate,
+  updateNotePriority,
+  updateNoteTitle,
+  createProjectNote,
+} from "./utils";
 import { readBaseConfig, evaluateWithView } from "./bases";
 import { clearVaultCache } from "./cache";
 import path from "path";
@@ -12,13 +34,13 @@ type Prefs = {
 
 function formatDate(dateStr: string): string {
   try {
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
       const date = new Date(year, month, day);
-      const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+      const monthStr = date.toLocaleDateString("en-US", { month: "short" });
       return `${monthStr} ${day}`;
     }
     return dateStr;
@@ -29,7 +51,7 @@ function formatDate(dateStr: string): string {
 
 function isOverdue(dateStr: string): boolean {
   try {
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
@@ -47,7 +69,7 @@ function isOverdue(dateStr: string): boolean {
 
 function isToday(dateStr: string): boolean {
   try {
-    const parts = dateStr.split('-');
+    const parts = dateStr.split("-");
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
@@ -76,7 +98,10 @@ export default function Command() {
       setIsLoading(true);
 
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Project Base File in Preferences" });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Set Project Base File in Preferences",
+        });
         setNotes([]);
         return;
       }
@@ -88,7 +113,7 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to parse Project Base file",
-          message: "Check that your base file is valid YAML"
+          message: "Check that your base file is valid YAML",
         });
         setNotes([]);
         return;
@@ -98,29 +123,39 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Could not find vault for Project Base file",
-          message: "Make sure your .base file is inside an Obsidian vault with .obsidian folder"
+          message:
+            "Make sure your .base file is inside an Obsidian vault with .obsidian folder",
         });
         setNotes([]);
         return;
       }
 
       // Display effective filter info
-      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
-      setEffectiveProject(projectTagFilters.flatMap(f => f.values).join(', ') || 'dynamic filters');
+      const projectTagFilters = projectConfig.filters.filter(
+        (f) => f.property === "tags",
+      );
+      setEffectiveProject(
+        projectTagFilters.flatMap((f) => f.values).join(", ") ||
+          "dynamic filters",
+      );
 
       // Scan the vault with inline filtering
       const projectViewName = prefs.projectViewName.trim();
 
       const filterFn = (note: any) => {
         // Apply filters during scan to avoid loading all files into memory
-        const matchesProject = evaluateWithView(projectConfig, note, projectViewName);
+        const matchesProject = evaluateWithView(
+          projectConfig,
+          note,
+          projectViewName,
+        );
 
         if (!matchesProject) return null;
 
         return {
           ...note,
           hasTodoTag: false,
-          hasProjectTag: matchesProject
+          hasProjectTag: matchesProject,
         };
       };
 
@@ -130,16 +165,16 @@ export default function Command() {
       }
 
       // Extract tags from base config for early filtering
-      const projectTags = projectTagFilters.flatMap(f => f.values);
+      const projectTags = projectTagFilters.flatMap((f) => f.values);
 
       // Scan vault with Raycast Cache enabled
       const scanned = await scanVault({
         vaultPath: projectConfig.vaultPath,
         todoTags: [],
         projectTags,
-        useCache: true,  // ✅ Enable Raycast Cache API
+        useCache: true, // ✅ Enable Raycast Cache API
         filterFn,
-        maxAge: 5 * 60 * 1000  // 5 minutes
+        maxAge: 5 * 60 * 1000, // 5 minutes
       });
 
       // Update UI first (fast!)
@@ -149,10 +184,14 @@ export default function Command() {
       // Fire-and-forget toast (non-blocking, won't be cancelled)
       void showToast({
         style: Toast.Style.Success,
-        title: `✓ Loaded ${scanned.length} projects`
+        title: `✓ Loaded ${scanned.length} projects`,
       });
     } catch (e: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to load", message: String(e?.message ?? e) });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to load",
+        message: String(e?.message ?? e),
+      });
       setIsLoading(false);
     }
   }
@@ -165,7 +204,10 @@ export default function Command() {
   async function handleCreateProject() {
     try {
       if (!prefs.basesProjectFile?.trim()) {
-        await showToast({ style: Toast.Style.Failure, title: "Set Project Base File in Preferences" });
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Set Project Base File in Preferences",
+        });
         return;
       }
 
@@ -176,7 +218,7 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to parse Project Base file",
-          message: "Check that your base file is valid YAML"
+          message: "Check that your base file is valid YAML",
         });
         return;
       }
@@ -185,37 +227,49 @@ export default function Command() {
         await showToast({
           style: Toast.Style.Failure,
           title: "Could not find vault for Project Base file",
-          message: "Base file must be inside an Obsidian vault"
+          message: "Base file must be inside an Obsidian vault",
         });
         return;
       }
 
       // Extract all tags from tag filters
-      const projectTagFilters = projectConfig.filters.filter(f => f.property === "tags");
-      if (projectTagFilters.length === 0 || projectTagFilters[0].values.length === 0) {
+      const projectTagFilters = projectConfig.filters.filter(
+        (f) => f.property === "tags",
+      );
+      if (
+        projectTagFilters.length === 0 ||
+        projectTagFilters[0].values.length === 0
+      ) {
         await showToast({
           style: Toast.Style.Failure,
           title: "No tags found in Project Base file",
-          message: "Base file must contain at least one tag filter"
+          message: "Base file must contain at least one tag filter",
         });
         return;
       }
 
-      const projectTags = projectTagFilters.flatMap(f => f.values);
+      const projectTags = projectTagFilters.flatMap((f) => f.values);
 
       // Create new project note (pass cached notes for fast folder detection)
-      const newNotePath = await createProjectNote(projectConfig.vaultPath, searchText.trim(), projectTags, undefined, undefined, notes);
+      const newNotePath = await createProjectNote(
+        projectConfig.vaultPath,
+        searchText.trim(),
+        projectTags,
+        undefined,
+        undefined,
+        notes,
+      );
 
       // Create a Note object for the new project to add to state immediately
       const newNote: Note = {
         title: searchText.trim(),
         path: newNotePath,
-        relativePath: newNotePath.replace(projectConfig.vaultPath + '/', ''),
-        tags: projectTags.map(t => t.toLowerCase()),
+        relativePath: newNotePath.replace(projectConfig.vaultPath + "/", ""),
+        tags: projectTags.map((t) => t.toLowerCase()),
         mtimeMs: Date.now(),
         hasTodoTag: false,
         hasProjectTag: true,
-        status: 'planning',
+        status: "planning",
         project: undefined,
         dateDue: undefined,
         dateStarted: undefined,
@@ -224,7 +278,7 @@ export default function Command() {
         recurrenceAnchor: undefined,
         priority: undefined,
         timeTracked: 0,
-        timeEstimate: 0
+        timeEstimate: 0,
       };
 
       // Add the new note to the current notes state immediately
@@ -233,7 +287,7 @@ export default function Command() {
       await showToast({
         style: Toast.Style.Success,
         title: "Project Created",
-        message: searchText.trim()
+        message: searchText.trim(),
       });
 
       // Clear search
@@ -242,7 +296,11 @@ export default function Command() {
       // Clear cache in background so next reload gets fresh data
       clearVaultCache(projectConfig.vaultPath);
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to create project", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to create project",
+        message: error.message,
+      });
     }
   }
 
@@ -255,20 +313,82 @@ export default function Command() {
   }, [notes, searchText]);
 
   // Group projects by status
-  const planning = useMemo(() => filteredProjects.filter((n) => n.status === "planning").sort(sortByMtimeDesc), [filteredProjects]);
-  const research = useMemo(() => filteredProjects.filter((n) => n.status === "research").sort(sortByMtimeDesc), [filteredProjects]);
-  const upNext = useMemo(() => filteredProjects.filter((n) => n.status === "up-next" || n.status === "up next").sort(sortByMtimeDesc), [filteredProjects]);
-  const inProgress = useMemo(() => filteredProjects.filter((n) => n.status === "in-progress" || n.status === "active").sort(sortByMtimeDesc), [filteredProjects]);
-  const onHold = useMemo(() => filteredProjects.filter((n) => n.status === "on-hold" || n.status === "hold" || n.status === "paused").sort(sortByMtimeDesc), [filteredProjects]);
-  const someday = useMemo(() => filteredProjects.filter((n) => n.status === "someday").sort(sortByMtimeDesc), [filteredProjects]);
-  const other = useMemo(() => filteredProjects.filter((n) => !n.status || (n.status !== "planning" && n.status !== "research" && n.status !== "up-next" && n.status !== "up next" && n.status !== "in-progress" && n.status !== "active" && n.status !== "on-hold" && n.status !== "hold" && n.status !== "paused" && n.status !== "someday")).sort(sortByMtimeDesc), [filteredProjects]);
+  const planning = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "planning")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const research = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "research")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const upNext = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "up-next" || n.status === "up next")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const inProgress = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "in-progress" || n.status === "active")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const onHold = useMemo(
+    () =>
+      filteredProjects
+        .filter(
+          (n) =>
+            n.status === "on-hold" ||
+            n.status === "hold" ||
+            n.status === "paused",
+        )
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const someday = useMemo(
+    () =>
+      filteredProjects
+        .filter((n) => n.status === "someday")
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
+  const other = useMemo(
+    () =>
+      filteredProjects
+        .filter(
+          (n) =>
+            !n.status ||
+            (n.status !== "planning" &&
+              n.status !== "research" &&
+              n.status !== "up-next" &&
+              n.status !== "up next" &&
+              n.status !== "in-progress" &&
+              n.status !== "active" &&
+              n.status !== "on-hold" &&
+              n.status !== "hold" &&
+              n.status !== "paused" &&
+              n.status !== "someday"),
+        )
+        .sort(sortByMtimeDesc),
+    [filteredProjects],
+  );
 
   // Check if search text exactly matches any existing project
   const projects = useMemo(() => notes.filter((n) => n.hasProjectTag), [notes]);
   const showCreateOption = useMemo(() => {
     if (!searchText.trim()) return false;
     const searchLower = searchText.trim().toLowerCase();
-    return !projects.some(project => project.title.toLowerCase() === searchLower);
+    return !projects.some(
+      (project) => project.title.toLowerCase() === searchLower,
+    );
   }, [searchText, projects]);
 
   return (
@@ -302,51 +422,104 @@ export default function Command() {
         </List.Section>
       )}
       {planning.length > 0 && (
-        <List.Section title={`Planning (${planning.length})`} subtitle="status: planning">
+        <List.Section
+          title={`Planning (${planning.length})`}
+          subtitle="status: planning"
+        >
           {planning.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {research.length > 0 && (
-        <List.Section title={`Research (${research.length})`} subtitle="status: research">
+        <List.Section
+          title={`Research (${research.length})`}
+          subtitle="status: research"
+        >
           {research.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {upNext.length > 0 && (
-        <List.Section title={`Up Next (${upNext.length})`} subtitle="status: up-next">
+        <List.Section
+          title={`Up Next (${upNext.length})`}
+          subtitle="status: up-next"
+        >
           {upNext.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {inProgress.length > 0 && (
-        <List.Section title={`In Progress (${inProgress.length})`} subtitle="status: in-progress">
+        <List.Section
+          title={`In Progress (${inProgress.length})`}
+          subtitle="status: in-progress"
+        >
           {inProgress.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {onHold.length > 0 && (
-        <List.Section title={`On Hold (${onHold.length})`} subtitle="status: on-hold">
+        <List.Section
+          title={`On Hold (${onHold.length})`}
+          subtitle="status: on-hold"
+        >
           {onHold.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {someday.length > 0 && (
-        <List.Section title={`Someday (${someday.length})`} subtitle="status: someday">
+        <List.Section
+          title={`Someday (${someday.length})`}
+          subtitle="status: someday"
+        >
           {someday.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
       {other.length > 0 && (
         <List.Section title={`Other (${other.length})`}>
           {other.map((n) => (
-            <ProjectItem key={n.path} note={n} onRefresh={() => load(true)} onRebuild={() => load(true)} />
+            <ProjectItem
+              key={n.path}
+              note={n}
+              onRefresh={() => load(true)}
+              onRebuild={() => load(true)}
+            />
           ))}
         </List.Section>
       )}
@@ -370,7 +543,13 @@ export default function Command() {
   );
 }
 
-function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated: () => void }) {
+function SetStatusForm({
+  note,
+  onStatusUpdated,
+}: {
+  note: Note;
+  onStatusUpdated: () => void;
+}) {
   const { pop } = useNavigation();
   const statuses = [
     { value: "planning", title: "Planning", icon: Icon.Pencil },
@@ -380,7 +559,7 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
     { value: "on-hold", title: "On Hold", icon: Icon.Pause },
     { value: "someday", title: "Someday", icon: Icon.Calendar },
     { value: "done", title: "Done", icon: Icon.CheckCircle },
-    { value: "canceled", title: "Canceled", icon: Icon.XMarkCircle }
+    { value: "canceled", title: "Canceled", icon: Icon.XMarkCircle },
   ];
 
   async function handleStatusChange(newStatus: string) {
@@ -389,17 +568,24 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
       await showToast({
         style: Toast.Style.Success,
         title: `Set Status: ${newStatus}`,
-        message: note.title
+        message: note.title,
       });
       onStatusUpdated();
       pop();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to update",
+        message: error.message,
+      });
     }
   }
 
   return (
-    <List navigationTitle={`Set Status: ${note.title}`} searchBarPlaceholder="Choose new status...">
+    <List
+      navigationTitle={`Set Status: ${note.title}`}
+      searchBarPlaceholder="Choose new status..."
+    >
       <List.Section title={`Current: ${note.status || "none"}`}>
         {statuses.map((s) => (
           <List.Item
@@ -423,7 +609,13 @@ function SetStatusForm({ note, onStatusUpdated }: { note: Note; onStatusUpdated:
   );
 }
 
-function EditTitleForm({ note, onTitleUpdated }: { note: Note; onTitleUpdated: () => void }) {
+function EditTitleForm({
+  note,
+  onTitleUpdated,
+}: {
+  note: Note;
+  onTitleUpdated: () => void;
+}) {
   const { pop } = useNavigation();
   const [title, setTitle] = useState(note.title);
 
@@ -464,7 +656,15 @@ function EditTitleForm({ note, onTitleUpdated }: { note: Note; onTitleUpdated: (
   );
 }
 
-function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: () => void; onRebuild: () => void }) {
+function ProjectItem({
+  note,
+  onRefresh,
+  onRebuild,
+}: {
+  note: Note;
+  onRefresh: () => void;
+  onRebuild: () => void;
+}) {
   const accessories = [];
   if (note.dateDue) {
     const overdue = isOverdue(note.dateDue);
@@ -477,7 +677,7 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
     }
     accessories.push({
       text: formatDate(note.dateDue),
-      icon: { source: Icon.Calendar, tintColor: iconColor }
+      icon: { source: Icon.Calendar, tintColor: iconColor },
     });
   }
   if (note.status) {
@@ -494,24 +694,36 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
     itemIcon = Icon.ArrowRight;
   } else if (note.status === "in-progress" || note.status === "active") {
     itemIcon = Icon.CircleProgress;
-  } else if (note.status === "on-hold" || note.status === "hold" || note.status === "paused") {
+  } else if (
+    note.status === "on-hold" ||
+    note.status === "hold" ||
+    note.status === "paused"
+  ) {
     itemIcon = Icon.Pause;
   } else if (note.status === "someday") {
     itemIcon = Icon.Calendar;
   }
 
-  async function handleDateChange(field: string, fieldLabel: string, date: Date | null) {
+  async function handleDateChange(
+    field: string,
+    fieldLabel: string,
+    date: Date | null,
+  ) {
     try {
       await updateNoteDate(note.path, field, date);
       const message = date ? `Set to: ${date.toLocaleDateString()}` : "Cleared";
       await showToast({
         style: Toast.Style.Success,
         title: `${fieldLabel} Updated`,
-        message: note.title
+        message: note.title,
       });
       onRefresh();
     } catch (error: any) {
-      await showToast({ style: Toast.Style.Failure, title: "Failed to update", message: error.message });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to update",
+        message: error.message,
+      });
     }
   }
 
@@ -574,7 +786,11 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               icon={Icon.ExclamationMark}
               onAction={async () => {
                 await updateNotePriority(note.path, "1-urgent");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "1 - Urgent" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "1 - Urgent",
+                });
                 onRefresh();
               }}
             />
@@ -583,7 +799,11 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               icon={Icon.Flag}
               onAction={async () => {
                 await updateNotePriority(note.path, "2-high");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "2 - High" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "2 - High",
+                });
                 onRefresh();
               }}
             />
@@ -592,7 +812,11 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               icon={Icon.Circle}
               onAction={async () => {
                 await updateNotePriority(note.path, "3-medium");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "3 - Medium" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "3 - Medium",
+                });
                 onRefresh();
               }}
             />
@@ -601,7 +825,11 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               icon={Icon.Minus}
               onAction={async () => {
                 await updateNotePriority(note.path, "4-low");
-                await showToast({ style: Toast.Style.Success, title: "Priority Set", message: "4 - Low" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Set",
+                  message: "4 - Low",
+                });
                 onRefresh();
               }}
             />
@@ -610,7 +838,10 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               icon={Icon.XMarkCircle}
               onAction={async () => {
                 await updateNotePriority(note.path, "");
-                await showToast({ style: Toast.Style.Success, title: "Priority Cleared" });
+                await showToast({
+                  style: Toast.Style.Success,
+                  title: "Priority Cleared",
+                });
                 onRefresh();
               }}
             />
@@ -624,7 +855,7 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
               await showToast({
                 style: Toast.Style.Success,
                 title: "Marked as Done",
-                message: note.title
+                message: note.title,
               });
               onRefresh();
             }}
@@ -637,7 +868,9 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
           <Action.PickDate
             title="Set Start Date"
             icon={Icon.PlayFilled}
-            onChange={(date) => handleDateChange("date_started", "Start Date", date)}
+            onChange={(date) =>
+              handleDateChange("date_started", "Start Date", date)
+            }
           />
           <Action.OpenInBrowser
             title="Open in Obsidian"
@@ -646,13 +879,21 @@ function ProjectItem({ note, onRefresh, onRebuild }: { note: Note; onRefresh: ()
           />
           <Action.ShowInFinder path={note.path} />
           <Action.CopyToClipboard title="Copy Path" content={note.path} />
-          <Action title="Refresh" icon={Icon.RotateClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={onRefresh} />
+          <Action
+            title="Refresh"
+            icon={Icon.RotateClockwise}
+            shortcut={{ modifiers: ["cmd"], key: "r" }}
+            onAction={onRefresh}
+          />
           <Action
             title="Rebuild Cache"
             icon={Icon.ArrowClockwise}
             shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
             onAction={async () => {
-              await showToast({ style: Toast.Style.Animated, title: "Rebuilding cache..." });
+              await showToast({
+                style: Toast.Style.Animated,
+                title: "Rebuilding cache...",
+              });
               await onRebuild();
             }}
           />

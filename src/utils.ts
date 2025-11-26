@@ -8,7 +8,6 @@ import { getCachedNotes, setCachedNotes, isCacheFresh } from "./cache";
 const TAG_INLINE = /(^|\\s)#([A-Za-z0-9/_-]+)/g;
 const H1_REGEX = /^#\\s+(.+?)\\s*$/m;
 
-
 type CachedNote = {
   path: string;
   relativePath: string;
@@ -47,8 +46,16 @@ export type Note = {
 
 function normalizeTags(value: unknown): string[] {
   if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap((v) => (typeof v === "string" ? v.split(/[,\s]+/) : [])).map((t) => t.trim()).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,\s]+/).map((t) => t.trim()).filter(Boolean);
+  if (Array.isArray(value))
+    return value
+      .flatMap((v) => (typeof v === "string" ? v.split(/[,\s]+/) : []))
+      .map((t) => t.trim())
+      .filter(Boolean);
+  if (typeof value === "string")
+    return value
+      .split(/[,\s]+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
   return [];
 }
 
@@ -96,7 +103,10 @@ export async function readCache(vaultPath: string): Promise<VaultCache | null> {
 /**
  * Write cache to disk
  */
-export async function writeCache(vaultPath: string, notes: CachedNote[]): Promise<void> {
+export async function writeCache(
+  vaultPath: string,
+  notes: CachedNote[],
+): Promise<void> {
   try {
     const cachePath = getCachePath(vaultPath);
     const cacheDir = path.dirname(cachePath);
@@ -108,7 +118,7 @@ export async function writeCache(vaultPath: string, notes: CachedNote[]): Promis
       version: 1,
       vaultPath,
       createdAt: new Date().toISOString(),
-      notes
+      notes,
     };
 
     await fs.writeFile(cachePath, JSON.stringify(cache, null, 2), "utf8");
@@ -132,30 +142,72 @@ function cachedNoteToNote(cached: CachedNote): Note {
     mtimeMs: cached.mtimeMs,
     hasTodoTag: false, // Will be set by caller
     hasProjectTag: false, // Will be set by caller
-    status: typeof fm.status === "string" ? fm.status.trim().toLowerCase() :
-            typeof fm.Status === "string" ? fm.Status.trim().toLowerCase() : undefined,
-    project: typeof fm.project === "string" ? fm.project.trim().replace(/^\[\[|\]\]$/g, "") :
-             typeof fm.Project === "string" ? fm.Project.trim().replace(/^\[\[|\]\]$/g, "") : undefined,
-    dateDue: typeof fm.date_due === "string" ? fm.date_due.trim() :
-             typeof fm.dateDue === "string" ? fm.dateDue.trim() :
-             typeof fm.due_date === "string" ? fm.due_date.trim() :
-             typeof fm.due === "string" ? fm.due.trim() : undefined,
-    dateStarted: typeof fm.date_started === "string" ? fm.date_started.trim() :
-                 typeof fm.dateStarted === "string" ? fm.dateStarted.trim() :
-                 typeof fm.start_date === "string" ? fm.start_date.trim() :
-                 typeof fm.started === "string" ? fm.started.trim() : undefined,
-    dateScheduled: typeof fm.date_scheduled === "string" ? fm.date_scheduled.trim() :
-                   typeof fm.dateScheduled === "string" ? fm.dateScheduled.trim() :
-                   typeof fm.scheduled === "string" ? fm.scheduled.trim() : undefined,
-    recurrence: typeof fm.recurrence === "string" ? fm.recurrence.trim() : undefined,
-    recurrenceAnchor: typeof fm.recurrence_anchor === "string" ? fm.recurrence_anchor.trim() :
-                      typeof fm.recurrenceAnchor === "string" ? fm.recurrenceAnchor.trim() : undefined,
-    priority: typeof fm.priority === "string" ? fm.priority.trim() :
-              typeof fm.Priority === "string" ? fm.Priority.trim() : undefined,
-    timeTracked: typeof fm.time_tracked === "number" ? fm.time_tracked :
-                 typeof fm.timeTracked === "number" ? fm.timeTracked : undefined,
-    timeEstimate: typeof fm.time_estimate === "number" ? fm.time_estimate :
-                  typeof fm.timeEstimate === "number" ? fm.timeEstimate : undefined
+    status:
+      typeof fm.status === "string"
+        ? fm.status.trim().toLowerCase()
+        : typeof fm.Status === "string"
+          ? fm.Status.trim().toLowerCase()
+          : undefined,
+    project:
+      typeof fm.project === "string"
+        ? fm.project.trim().replace(/^\[\[|\]\]$/g, "")
+        : typeof fm.Project === "string"
+          ? fm.Project.trim().replace(/^\[\[|\]\]$/g, "")
+          : undefined,
+    dateDue:
+      typeof fm.date_due === "string"
+        ? fm.date_due.trim()
+        : typeof fm.dateDue === "string"
+          ? fm.dateDue.trim()
+          : typeof fm.due_date === "string"
+            ? fm.due_date.trim()
+            : typeof fm.due === "string"
+              ? fm.due.trim()
+              : undefined,
+    dateStarted:
+      typeof fm.date_started === "string"
+        ? fm.date_started.trim()
+        : typeof fm.dateStarted === "string"
+          ? fm.dateStarted.trim()
+          : typeof fm.start_date === "string"
+            ? fm.start_date.trim()
+            : typeof fm.started === "string"
+              ? fm.started.trim()
+              : undefined,
+    dateScheduled:
+      typeof fm.date_scheduled === "string"
+        ? fm.date_scheduled.trim()
+        : typeof fm.dateScheduled === "string"
+          ? fm.dateScheduled.trim()
+          : typeof fm.scheduled === "string"
+            ? fm.scheduled.trim()
+            : undefined,
+    recurrence:
+      typeof fm.recurrence === "string" ? fm.recurrence.trim() : undefined,
+    recurrenceAnchor:
+      typeof fm.recurrence_anchor === "string"
+        ? fm.recurrence_anchor.trim()
+        : typeof fm.recurrenceAnchor === "string"
+          ? fm.recurrenceAnchor.trim()
+          : undefined,
+    priority:
+      typeof fm.priority === "string"
+        ? fm.priority.trim()
+        : typeof fm.Priority === "string"
+          ? fm.Priority.trim()
+          : undefined,
+    timeTracked:
+      typeof fm.time_tracked === "number"
+        ? fm.time_tracked
+        : typeof fm.timeTracked === "number"
+          ? fm.timeTracked
+          : undefined,
+    timeEstimate:
+      typeof fm.time_estimate === "number"
+        ? fm.time_estimate
+        : typeof fm.timeEstimate === "number"
+          ? fm.timeEstimate
+          : undefined,
   };
 }
 
@@ -167,7 +219,14 @@ export async function scanVault(opts: {
   useCache?: boolean;
   maxAge?: number;
 }): Promise<Note[]> {
-  const { vaultPath, todoTags, projectTags, filterFn, useCache = true, maxAge = 5 * 60 * 1000 } = opts;
+  const {
+    vaultPath,
+    todoTags,
+    projectTags,
+    filterFn,
+    useCache = true,
+    maxAge = 5 * 60 * 1000,
+  } = opts;
 
   // Try Raycast Cache API first
   if (useCache) {
@@ -203,11 +262,11 @@ export async function scanVault(opts: {
       "**/log/**",
       "**/Clippings/**",
       "**/files/**",
-      "**/.trash/**"
+      "**/.trash/**",
     ],
     onlyFiles: true,
     unique: true,
-    followSymbolicLinks: false
+    followSymbolicLinks: false,
   });
 
   const notes: Note[] = [];
@@ -218,8 +277,12 @@ export async function scanVault(opts: {
   const limitedEntries = entries; // Process all files for cache
 
   // Combine todo and project tags for filtering
-  const requiredTags = [...todoTags, ...projectTags].map(t => t.toLowerCase());
-  console.log(`[Scan] Found ${entries.length} files, filtering for tags: ${requiredTags.join(', ')}`);
+  const requiredTags = [...todoTags, ...projectTags].map((t) =>
+    t.toLowerCase(),
+  );
+  console.log(
+    `[Scan] Found ${entries.length} files, filtering for tags: ${requiredTags.join(", ")}`,
+  );
 
   for (let i = 0; i < limitedEntries.length; i += BATCH_SIZE) {
     const batch = limitedEntries.slice(i, i + BATCH_SIZE);
@@ -227,19 +290,31 @@ export async function scanVault(opts: {
       batch.map(async (rel) => {
         const abs = path.join(vaultPath, rel);
         try {
-          const [raw, st] = await Promise.all([fs.readFile(abs, "utf8"), fs.stat(abs)]);
+          const [raw, st] = await Promise.all([
+            fs.readFile(abs, "utf8"),
+            fs.stat(abs),
+          ]);
           const parsed = matter(raw);
           const fmTags = normalizeTags((parsed.data as any)?.tags);
           const inlineTags = extractInlineTags(parsed.content);
-          const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+          const tags = [...new Set([...fmTags, ...inlineTags])].map((t) =>
+            t.toLowerCase(),
+          );
 
           // EARLY FILTER: Skip files that don't have any of the required tags
           // This prevents memory exhaustion on large vaults
-          if (requiredTags.length > 0 && !requiredTags.some(reqTag => tags.includes(reqTag))) {
+          if (
+            requiredTags.length > 0 &&
+            !requiredTags.some((reqTag) => tags.includes(reqTag))
+          ) {
             return null;
           }
 
-          const title = extractTitle(parsed.content, (parsed.data as any)?.title, path.parse(rel).name);
+          const title = extractTitle(
+            parsed.content,
+            (parsed.data as any)?.title,
+            path.parse(rel).name,
+          );
 
           // Store in cache (all frontmatter)
           cachedNotes.push({
@@ -248,47 +323,91 @@ export async function scanVault(opts: {
             title,
             tags,
             frontmatter: parsed.data || {},
-            mtimeMs: st.mtimeMs
+            mtimeMs: st.mtimeMs,
           });
 
-        // Extract status and project from frontmatter
-        const rawStatus = (parsed.data as any)?.status || (parsed.data as any)?.Status;
-        const status = typeof rawStatus === "string" ? rawStatus.trim().toLowerCase() : undefined;
+          // Extract status and project from frontmatter
+          const rawStatus =
+            (parsed.data as any)?.status || (parsed.data as any)?.Status;
+          const status =
+            typeof rawStatus === "string"
+              ? rawStatus.trim().toLowerCase()
+              : undefined;
 
-        const rawProject = (parsed.data as any)?.project || (parsed.data as any)?.Project;
-        const project = typeof rawProject === "string" ? rawProject.trim().replace(/^\[\[|\]\]$/g, "") : undefined;
+          const rawProject =
+            (parsed.data as any)?.project || (parsed.data as any)?.Project;
+          const project =
+            typeof rawProject === "string"
+              ? rawProject.trim().replace(/^\[\[|\]\]$/g, "")
+              : undefined;
 
-        // Extract date fields from frontmatter (support various naming conventions)
-        const rawDateDue = (parsed.data as any)?.date_due || (parsed.data as any)?.dateDue || (parsed.data as any)?.due_date || (parsed.data as any)?.due;
-        const dateDue = typeof rawDateDue === "string" ? rawDateDue.trim() : undefined;
+          // Extract date fields from frontmatter (support various naming conventions)
+          const rawDateDue =
+            (parsed.data as any)?.date_due ||
+            (parsed.data as any)?.dateDue ||
+            (parsed.data as any)?.due_date ||
+            (parsed.data as any)?.due;
+          const dateDue =
+            typeof rawDateDue === "string" ? rawDateDue.trim() : undefined;
 
-        const rawDateStarted = (parsed.data as any)?.date_started || (parsed.data as any)?.dateStarted || (parsed.data as any)?.start_date || (parsed.data as any)?.started;
-        const dateStarted = typeof rawDateStarted === "string" ? rawDateStarted.trim() : undefined;
+          const rawDateStarted =
+            (parsed.data as any)?.date_started ||
+            (parsed.data as any)?.dateStarted ||
+            (parsed.data as any)?.start_date ||
+            (parsed.data as any)?.started;
+          const dateStarted =
+            typeof rawDateStarted === "string"
+              ? rawDateStarted.trim()
+              : undefined;
 
-        const rawDateScheduled = (parsed.data as any)?.date_scheduled || (parsed.data as any)?.dateScheduled || (parsed.data as any)?.scheduled;
-        const dateScheduled = typeof rawDateScheduled === "string" ? rawDateScheduled.trim() : undefined;
+          const rawDateScheduled =
+            (parsed.data as any)?.date_scheduled ||
+            (parsed.data as any)?.dateScheduled ||
+            (parsed.data as any)?.scheduled;
+          const dateScheduled =
+            typeof rawDateScheduled === "string"
+              ? rawDateScheduled.trim()
+              : undefined;
 
-        // Extract recurrence fields (TaskNotes 4.0.1 compatibility)
-        const rawRecurrence = (parsed.data as any)?.recurrence;
-        const recurrence = typeof rawRecurrence === "string" ? rawRecurrence.trim() : undefined;
+          // Extract recurrence fields (TaskNotes 4.0.1 compatibility)
+          const rawRecurrence = (parsed.data as any)?.recurrence;
+          const recurrence =
+            typeof rawRecurrence === "string"
+              ? rawRecurrence.trim()
+              : undefined;
 
-        const rawRecurrenceAnchor = (parsed.data as any)?.recurrence_anchor || (parsed.data as any)?.recurrenceAnchor;
-        const recurrenceAnchor = typeof rawRecurrenceAnchor === "string" ? rawRecurrenceAnchor.trim() : undefined;
+          const rawRecurrenceAnchor =
+            (parsed.data as any)?.recurrence_anchor ||
+            (parsed.data as any)?.recurrenceAnchor;
+          const recurrenceAnchor =
+            typeof rawRecurrenceAnchor === "string"
+              ? rawRecurrenceAnchor.trim()
+              : undefined;
 
-        // Extract priority (alphabetical sorting as per TaskNotes 4.0.1)
-        const rawPriority = (parsed.data as any)?.priority || (parsed.data as any)?.Priority;
-        const priority = typeof rawPriority === "string" ? rawPriority.trim() : undefined;
+          // Extract priority (alphabetical sorting as per TaskNotes 4.0.1)
+          const rawPriority =
+            (parsed.data as any)?.priority || (parsed.data as any)?.Priority;
+          const priority =
+            typeof rawPriority === "string" ? rawPriority.trim() : undefined;
 
-        // Extract time tracking fields
-        const rawTimeTracked = (parsed.data as any)?.time_tracked || (parsed.data as any)?.timeTracked;
-        const timeTracked = typeof rawTimeTracked === "number" ? rawTimeTracked : undefined;
+          // Extract time tracking fields
+          const rawTimeTracked =
+            (parsed.data as any)?.time_tracked ||
+            (parsed.data as any)?.timeTracked;
+          const timeTracked =
+            typeof rawTimeTracked === "number" ? rawTimeTracked : undefined;
 
-        const rawTimeEstimate = (parsed.data as any)?.time_estimate || (parsed.data as any)?.timeEstimate;
-        const timeEstimate = typeof rawTimeEstimate === "number" ? rawTimeEstimate : undefined;
+          const rawTimeEstimate =
+            (parsed.data as any)?.time_estimate ||
+            (parsed.data as any)?.timeEstimate;
+          const timeEstimate =
+            typeof rawTimeEstimate === "number" ? rawTimeEstimate : undefined;
 
-        // Check if note has any of the specified todo or project tags
-        const hasTodoTag = todoTags.some(todoTag => tags.includes(todoTag));
-        const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
+          // Check if note has any of the specified todo or project tags
+          const hasTodoTag = todoTags.some((todoTag) => tags.includes(todoTag));
+          const hasProjectTag = projectTags.some((projectTag) =>
+            tags.includes(projectTag),
+          );
 
           // NOTE: With dynamic filtering from base files, we no longer filter out
           // done/canceled todos here. The base file filters control what gets shown.
@@ -311,13 +430,13 @@ export async function scanVault(opts: {
             recurrenceAnchor,
             priority,
             timeTracked,
-            timeEstimate
+            timeEstimate,
           };
         } catch {
           // ignore unreadable file
           return null;
         }
-      })
+      }),
     );
 
     // Filter out nulls only - do NOT apply filterFn during scan
@@ -335,7 +454,9 @@ export async function scanVault(opts: {
   // This allows different filters to be applied to the same cached data
   if (useCache) {
     setCachedNotes(vaultPath, notes);
-    console.log(`[Cache] Stored ${notes.length} unfiltered notes for ${vaultPath}`);
+    console.log(
+      `[Cache] Stored ${notes.length} unfiltered notes for ${vaultPath}`,
+    );
   }
 
   // Also write to vault cache for backwards compatibility (can be removed later)
@@ -350,7 +471,9 @@ export async function scanVault(opts: {
         filtered.push(result);
       }
     }
-    console.log(`[Filter] Applied filter: ${notes.length} → ${filtered.length} notes`);
+    console.log(
+      `[Filter] Applied filter: ${notes.length} → ${filtered.length} notes`,
+    );
     return filtered;
   }
 
@@ -361,7 +484,10 @@ export function sortByMtimeDesc(a: Note, b: Note) {
   return b.mtimeMs - a.mtimeMs;
 }
 
-export async function updateNoteStatus(filePath: string, newStatus: string): Promise<void> {
+export async function updateNoteStatus(
+  filePath: string,
+  newStatus: string,
+): Promise<void> {
   const raw = await fs.readFile(filePath, "utf8");
   const parsed = matter(raw);
 
@@ -381,7 +507,11 @@ export async function updateNoteStatus(filePath: string, newStatus: string): Pro
   await fs.writeFile(filePath, updated, "utf8");
 }
 
-export async function updateNoteDate(filePath: string, field: string, date: Date | null): Promise<void> {
+export async function updateNoteDate(
+  filePath: string,
+  field: string,
+  date: Date | null,
+): Promise<void> {
   const raw = await fs.readFile(filePath, "utf8");
   const parsed = matter(raw);
 
@@ -391,7 +521,7 @@ export async function updateNoteDate(filePath: string, field: string, date: Date
       delete parsed.data[field];
     } else {
       // Format date as YYYY-MM-DD
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = date.toISOString().split("T")[0];
       parsed.data[field] = dateStr;
     }
     // Update dateModified
@@ -403,7 +533,10 @@ export async function updateNoteDate(filePath: string, field: string, date: Date
   await fs.writeFile(filePath, updated, "utf8");
 }
 
-export async function updateNoteProject(filePath: string, project: string): Promise<void> {
+export async function updateNoteProject(
+  filePath: string,
+  project: string,
+): Promise<void> {
   const raw = await fs.readFile(filePath, "utf8");
   const parsed = matter(raw);
 
@@ -444,7 +577,10 @@ export async function updateNotePriority(filePath: string, priority: string) {
   await fs.writeFile(filePath, updated, "utf8");
 }
 
-export async function updateNoteTitle(filePath: string, newTitle: string): Promise<string> {
+export async function updateNoteTitle(
+  filePath: string,
+  newTitle: string,
+): Promise<string> {
   // Update frontmatter and content
   const raw = await fs.readFile(filePath, "utf8");
   const parsed = matter(raw);
@@ -455,10 +591,10 @@ export async function updateNoteTitle(filePath: string, newTitle: string): Promi
   }
 
   // Update H1 heading in content
-  const lines = parsed.content.split('\n');
-  if (lines[0]?.startsWith('# ')) {
+  const lines = parsed.content.split("\n");
+  if (lines[0]?.startsWith("# ")) {
     lines[0] = `# ${newTitle}`;
-    parsed.content = lines.join('\n');
+    parsed.content = lines.join("\n");
   }
 
   parsed.data.dateModified = new Date().toISOString();
@@ -468,7 +604,7 @@ export async function updateNoteTitle(filePath: string, newTitle: string): Promi
   // Rename file
   const dir = path.dirname(filePath);
   const ext = path.extname(filePath);
-  const sanitizedTitle = newTitle.replace(/[/\\?%*:|"<>]/g, '-'); // Remove invalid chars
+  const sanitizedTitle = newTitle.replace(/[/\\?%*:|"<>]/g, "-"); // Remove invalid chars
   const newPath = path.join(dir, `${sanitizedTitle}${ext}`);
 
   if (filePath !== newPath) {
@@ -478,13 +614,22 @@ export async function updateNoteTitle(filePath: string, newTitle: string): Promi
   return newPath;
 }
 
-export async function scanProjects(vaultPath: string, projectTags: string[]): Promise<string[]> {
+export async function scanProjects(
+  vaultPath: string,
+  projectTags: string[],
+): Promise<string[]> {
   const entries = await fg(["**/*.md", "**/*.markdown"], {
     cwd: vaultPath,
-    ignore: ["**/.obsidian/**", "**/.git/**", "**/node_modules/**", "**/log/**", "**/archive/**"],
+    ignore: [
+      "**/.obsidian/**",
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/log/**",
+      "**/archive/**",
+    ],
     onlyFiles: true,
     unique: true,
-    followSymbolicLinks: false
+    followSymbolicLinks: false,
   });
 
   const projects: Set<string> = new Set();
@@ -497,10 +642,14 @@ export async function scanProjects(vaultPath: string, projectTags: string[]): Pr
         const parsed = matter(raw);
         const fmTags = normalizeTags((parsed.data as any)?.tags);
         const inlineTags = extractInlineTags(parsed.content);
-        const tags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+        const tags = [...new Set([...fmTags, ...inlineTags])].map((t) =>
+          t.toLowerCase(),
+        );
 
         // Check if note has any of the specified project tags
-        const hasProjectTag = projectTags.some(projectTag => tags.includes(projectTag));
+        const hasProjectTag = projectTags.some((projectTag) =>
+          tags.includes(projectTag),
+        );
         if (hasProjectTag) {
           // Extract title from filename (remove .md extension)
           const title = path.parse(rel).name;
@@ -509,7 +658,7 @@ export async function scanProjects(vaultPath: string, projectTags: string[]): Pr
       } catch {
         // ignore unreadable file
       }
-    })
+    }),
   );
 
   return Array.from(projects).sort();
@@ -521,7 +670,11 @@ export async function scanProjects(vaultPath: string, projectTags: string[]): Pr
  *
  * OPTIMIZATION: Uses cached notes if available to avoid scanning entire vault
  */
-async function detectFolderForTags(vaultPath: string, tags: string[], cachedNotes?: Note[]): Promise<string> {
+async function detectFolderForTags(
+  vaultPath: string,
+  tags: string[],
+  cachedNotes?: Note[],
+): Promise<string> {
   try {
     // If we have cached notes, use them (much faster!)
     if (cachedNotes && cachedNotes.length > 0) {
@@ -529,7 +682,9 @@ async function detectFolderForTags(vaultPath: string, tags: string[], cachedNote
 
       for (const note of cachedNotes) {
         // Check if this note has any of the target tags
-        const hasTag = tags.some(tag => note.tags.includes(tag.toLowerCase()));
+        const hasTag = tags.some((tag) =>
+          note.tags.includes(tag.toLowerCase()),
+        );
 
         if (hasTag) {
           // Get the folder path (directory of the file)
@@ -563,11 +718,11 @@ async function detectFolderForTags(vaultPath: string, tags: string[], cachedNote
         "**/log/**",
         "**/Clippings/**",
         "**/files/**",
-        "**/.trash/**"
+        "**/.trash/**",
       ],
       onlyFiles: true,
       unique: true,
-      followSymbolicLinks: false
+      followSymbolicLinks: false,
     });
 
     // Count folders where notes with these tags exist
@@ -583,10 +738,12 @@ async function detectFolderForTags(vaultPath: string, tags: string[], cachedNote
         const parsed = matter(raw);
         const fmTags = normalizeTags((parsed.data as any)?.tags);
         const inlineTags = extractInlineTags(parsed.content);
-        const noteTags = [...new Set([...fmTags, ...inlineTags])].map((t) => t.toLowerCase());
+        const noteTags = [...new Set([...fmTags, ...inlineTags])].map((t) =>
+          t.toLowerCase(),
+        );
 
         // Check if this note has any of the target tags
-        const hasTag = tags.some(tag => noteTags.includes(tag.toLowerCase()));
+        const hasTag = tags.some((tag) => noteTags.includes(tag.toLowerCase()));
 
         if (hasTag) {
           // Get the folder path (directory of the file)
@@ -623,7 +780,7 @@ export async function createProjectNote(
   projectTags: string[],
   dateStarted?: Date,
   dateDue?: Date,
-  cachedNotes?: Note[]
+  cachedNotes?: Note[],
 ): Promise<string> {
   // Detect the best folder for this project based on existing notes with same tags
   const folder = await detectFolderForTags(vaultPath, projectTags, cachedNotes);
@@ -654,12 +811,12 @@ tags:\n`;
 dateModified: ${now}`;
 
     if (dateStarted) {
-      const dateStr = dateStarted.toISOString().split('T')[0];
+      const dateStr = dateStarted.toISOString().split("T")[0];
       frontmatter += `\ndate_started: ${dateStr}`;
     }
 
     if (dateDue) {
-      const dateStr = dateDue.toISOString().split('T')[0];
+      const dateStr = dateDue.toISOString().split("T")[0];
       frontmatter += `\ndate_due: ${dateStr}`;
     }
 
@@ -690,7 +847,7 @@ export async function createTodoNote(
   todoTags: string[],
   dateStarted?: Date,
   dateDue?: Date,
-  cachedNotes?: Note[]
+  cachedNotes?: Note[],
 ): Promise<string> {
   // Detect the best folder for this todo based on existing notes with same tags
   const folder = await detectFolderForTags(vaultPath, todoTags, cachedNotes);
@@ -721,12 +878,12 @@ tags:\n`;
 dateModified: ${now}`;
 
     if (dateStarted) {
-      const dateStr = dateStarted.toISOString().split('T')[0];
+      const dateStr = dateStarted.toISOString().split("T")[0];
       frontmatter += `\ndate_started: ${dateStr}`;
     }
 
     if (dateDue) {
-      const dateStr = dateDue.toISOString().split('T')[0];
+      const dateStr = dateDue.toISOString().split("T")[0];
       frontmatter += `\ndate_due: ${dateStr}`;
     }
 

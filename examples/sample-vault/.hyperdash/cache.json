@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "vaultPath": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault",
+  "createdAt": "2025-11-25T22:56:52.015Z",
+  "notes": [
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/ideas-backlog.md",
+      "relativePath": "projects/ideas-backlog.md",
+      "title": "Ideas & Future Projects",
+      "tags": [
+        "project"
+      ],
+      "frontmatter": {
+        "title": "Ideas & Future Projects",
+        "tags": [
+          "project"
+        ],
+        "status": "someday"
+      },
+      "mtimeMs": 1764090054193.0518
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/learn-raycast-extensions.md",
+      "relativePath": "projects/learn-raycast-extensions.md",
+      "title": "Learn Raycast Extensions",
+      "tags": [
+        "project",
+        "learning"
+      ],
+      "frontmatter": {
+        "title": "Learn Raycast Extensions",
+        "tags": [
+          "project",
+          "learning"
+        ],
+        "status": "planning",
+        "date_started": "2025-11-25T00:00:00.000Z"
+      },
+      "mtimeMs": 1764090030051.7993
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/obsidian-setup.md",
+      "relativePath": "projects/obsidian-setup.md",
+      "title": "Obsidian Vault Setup",
+      "tags": [
+        "project"
+      ],
+      "frontmatter": {
+        "title": "Obsidian Vault Setup",
+        "tags": [
+          "project"
+        ],
+        "status": "up-next",
+        "date_due": "2025-12-01T00:00:00.000Z"
+      },
+      "mtimeMs": 1764090044242.3196
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/personal-organization.md",
+      "relativePath": "projects/personal-organization.md",
+      "title": "Personal Organization",
+      "tags": [
+        "project"
+      ],
+      "frontmatter": {
+        "title": "Personal Organization",
+        "tags": [
+          "project"
+        ],
+        "status": "in-progress",
+        "date_started": "2025-11-20T00:00:00.000Z",
+        "priority": "medium"
+      },
+      "mtimeMs": 1764090019559.9897
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/example-completed-task.md",
+      "relativePath": "todos/example-completed-task.md",
+      "title": "Example Completed Task",
+      "tags": [
+        "todo"
+      ],
+      "frontmatter": {
+        "title": "Example Completed Task",
+        "tags": [
+          "todo"
+        ],
+        "status": "done",
+        "priority": "medium",
+        "date_due": "2025-11-20T00:00:00.000Z"
+      },
+      "mtimeMs": 1764089998363.3018
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/plan-weekly-review.md",
+      "relativePath": "todos/plan-weekly-review.md",
+      "title": "Plan Weekly Review",
+      "tags": [
+        "todo"
+      ],
+      "frontmatter": {
+        "title": "Plan Weekly Review",
+        "tags": [
+          "todo"
+        ],
+        "status": "in-progress",
+        "priority": "medium",
+        "date_due": "2025-11-25T00:00:00.000Z",
+        "recurrence": "every week",
+        "recurrence_anchor": "due",
+        "time_tracked": 0.5,
+        "time_estimate": 1
+      },
+      "mtimeMs": 1764089957078.764
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/organize-notes.md",
+      "relativePath": "todos/organize-notes.md",
+      "title": "Organize Notes in Obsidian",
+      "tags": [
+        "todo"
+      ],
+      "frontmatter": {
+        "title": "Organize Notes in Obsidian",
+        "tags": [
+          "todo"
+        ],
+        "status": "next",
+        "priority": "low",
+        "date_scheduled": "2025-11-27T00:00:00.000Z",
+        "project": "Personal Organization"
+      },
+      "mtimeMs": 1764089971691.3062
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/explore-hyperdash.md",
+      "relativePath": "todos/explore-hyperdash.md",
+      "title": "Explore Hyperdash Features",
+      "tags": [
+        "todo"
+      ],
+      "frontmatter": {
+        "title": "Explore Hyperdash Features",
+        "tags": [
+          "todo"
+        ],
+        "status": "todo",
+        "priority": "high",
+        "date_due": "2025-11-26T00:00:00.000Z"
+      },
+      "mtimeMs": 1764089948995.0237
+    },
+    {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/try-creating-task.md",
+      "relativePath": "todos/try-creating-task.md",
+      "title": "Try Creating Your Own Task",
+      "tags": [
+        "todo"
+      ],
+      "frontmatter": {
+        "title": "Try Creating Your Own Task",
+        "tags": [
+          "todo"
+        ],
+        "status": "someday"
+      },
+      "mtimeMs": 1764089989649.2795
+    }
+  ]
+}
