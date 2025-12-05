@@ -22,13 +22,11 @@ import {
   updateNoteProject,
   updateNotePriority,
   updateNoteTitle,
-  scanProjects,
   createProjectNote,
   createTodoNote,
 } from "./utils";
-import { readBaseConfig, evaluateWithView, type BaseConfig } from "./bases";
+import { readBaseConfig, evaluateWithView } from "./bases";
 import { clearVaultCache } from "./cache";
-import path from "path";
 
 type Prefs = {
   basesTodoFile: string;
@@ -102,8 +100,6 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
   const [searchText, setSearchText] = useState<string>("");
-  const [effectiveTodo, setEffectiveTodo] = useState<string>("");
-  const [effectiveProject, setEffectiveProject] = useState<string>("");
   const [loadingRef, setLoadingRef] = useState(false);
 
   async function load(rebuildCache = false) {
@@ -191,19 +187,11 @@ export default function Command() {
         (f) => f.property === "tags",
       );
 
-      setEffectiveTodo(
-        todoTagFilters.flatMap((f) => f.values).join(", ") || "dynamic filters",
-      );
-      setEffectiveProject(
-        projectTagFilters.flatMap((f) => f.values).join(", ") ||
-          "dynamic filters",
-      );
-
       // Scan the vault with inline filtering
       const todoViewName = prefs.todoViewName.trim();
       const projectViewName = prefs.projectViewName.trim();
 
-      const filterFn = (note: any) => {
+      const filterFn = (note: Note) => {
         // Apply filters during scan to avoid loading all files into memory
         const matchesTodo = evaluateWithView(todoConfig, note, todoViewName);
         const matchesProject = evaluateWithView(
@@ -254,11 +242,11 @@ export default function Command() {
         title: `✓ Loaded ${scanned.length} notes`,
         message: `${todoCount} todos, ${projectCount} projects`,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to load",
-        message: String(e?.message ?? e),
+        message: String((e as Error)?.message ?? e),
       });
       setIsLoading(false);
       setLoadingRef(false);
@@ -267,7 +255,6 @@ export default function Command() {
 
   useEffect(() => {
     load().catch(console.error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleCreateTodo() {
@@ -358,11 +345,11 @@ export default function Command() {
 
       // Clear cache in background so next reload gets fresh data
       clearVaultCache(todoConfig.vaultPath);
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to create todo",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -633,11 +620,11 @@ function SetStatusForm({
       });
       onStatusUpdated();
       pop(); // Close the form and return to the main list
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -719,7 +706,7 @@ function SetProjectForm({
 
         // Use cached vault scan with filter instead of scanProjects
         const projectViewName = prefs.projectViewName?.trim() || "";
-        const filterFn = (n: any) => {
+        const filterFn = (n: Note) => {
           const matches = evaluateWithView(projectConfig, n, projectViewName);
           if (!matches) return null;
           return { ...n, hasProjectTag: true };
@@ -736,11 +723,11 @@ function SetProjectForm({
 
         const notes = scanned.filter((n) => n.hasProjectTag);
         setProjectNotes(notes);
-      } catch (error: any) {
+      } catch (error: unknown) {
         await showToast({
           style: Toast.Style.Failure,
           title: "Failed to load projects",
-          message: error.message,
+          message: String((error as Error)?.message ?? error),
         });
       } finally {
         setIsLoading(false);
@@ -846,11 +833,11 @@ function SetProjectForm({
       });
       onProjectUpdated();
       pop();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -915,11 +902,11 @@ function SetProjectForm({
       });
       onProjectUpdated();
       pop();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to create project",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -934,11 +921,11 @@ function SetProjectForm({
       });
       onProjectUpdated();
       pop();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to clear",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -1173,11 +1160,11 @@ function EditTitleForm({
       });
       pop();
       onTitleUpdated();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -1296,18 +1283,17 @@ function NoteItem({
   ) {
     try {
       await updateNoteDate(note.path, field, date);
-      const message = date ? `Set to: ${date.toLocaleDateString()}` : "Cleared";
       await showToast({
         style: Toast.Style.Success,
         title: `${fieldLabel} Updated`,
         message: note.title,
       });
       onRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -1339,11 +1325,11 @@ function NoteItem({
       });
 
       onRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to delete",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }

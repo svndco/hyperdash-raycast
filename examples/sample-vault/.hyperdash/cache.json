@@ -1,7 +1,7 @@
 {
   "version": 1,
   "vaultPath": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault",
-  "createdAt": "2025-11-25T22:56:52.015Z",
+  "createdAt": "2025-11-27T01:45:39.224Z",
   "notes": [
     {
       "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/ideas-backlog.md",
@@ -20,23 +20,22 @@
       "mtimeMs": 1764090054193.0518
     },
     {
-      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/learn-raycast-extensions.md",
-      "relativePath": "projects/learn-raycast-extensions.md",
-      "title": "Learn Raycast Extensions",
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/personal-organization.md",
+      "relativePath": "projects/personal-organization.md",
+      "title": "Personal Organization",
       "tags": [
-        "project",
-        "learning"
+        "project"
       ],
       "frontmatter": {
-        "title": "Learn Raycast Extensions",
+        "title": "Personal Organization",
         "tags": [
-          "project",
-          "learning"
+          "project"
         ],
-        "status": "planning",
-        "date_started": "2025-11-25T00:00:00.000Z"
+        "status": "in-progress",
+        "date_started": "2025-11-20T00:00:00.000Z",
+        "priority": "medium"
       },
-      "mtimeMs": 1764090030051.7993
+      "mtimeMs": 1764090019559.9897
     },
     {
       "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/obsidian-setup.md",
@@ -56,22 +55,23 @@
       "mtimeMs": 1764090044242.3196
     },
     {
-      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/personal-organization.md",
-      "relativePath": "projects/personal-organization.md",
-      "title": "Personal Organization",
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/projects/learn-raycast-extensions.md",
+      "relativePath": "projects/learn-raycast-extensions.md",
+      "title": "Learn Raycast Extensions",
       "tags": [
-        "project"
+        "project",
+        "learning"
       ],
       "frontmatter": {
-        "title": "Personal Organization",
+        "title": "Learn Raycast Extensions",
         "tags": [
-          "project"
+          "project",
+          "learning"
         ],
-        "status": "in-progress",
-        "date_started": "2025-11-20T00:00:00.000Z",
-        "priority": "medium"
+        "status": "planning",
+        "date_started": "2025-11-25T00:00:00.000Z"
       },
-      "mtimeMs": 1764090019559.9897
+      "mtimeMs": 1764090030051.7993
     },
     {
       "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/example-completed-task.md",
@@ -133,6 +133,22 @@
       "mtimeMs": 1764089971691.3062
     },
     {
+      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/try-creating-task.md",
+      "relativePath": "todos/try-creating-task.md",
+      "title": "Try Creating Your Own Task",
+      "tags": [
+        "todo"
+      ],
+      "frontmatter": {
+        "title": "Try Creating Your Own Task",
+        "tags": [
+          "todo"
+        ],
+        "status": "someday"
+      },
+      "mtimeMs": 1764089989649.2795
+    },
+    {
       "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/explore-hyperdash.md",
       "relativePath": "todos/explore-hyperdash.md",
       "title": "Explore Hyperdash Features",
@@ -149,22 +165,6 @@
         "date_due": "2025-11-26T00:00:00.000Z"
       },
       "mtimeMs": 1764089948995.0237
-    },
-    {
-      "path": "/Volumes/SVND_A_013/ja/lab/code/svnd/hyperdash-raycast/examples/sample-vault/todos/try-creating-task.md",
-      "relativePath": "todos/try-creating-task.md",
-      "title": "Try Creating Your Own Task",
-      "tags": [
-        "todo"
-      ],
-      "frontmatter": {
-        "title": "Try Creating Your Own Task",
-        "tags": [
-          "todo"
-        ],
-        "status": "someday"
-      },
-      "mtimeMs": 1764089989649.2795
     }
   ]
 }

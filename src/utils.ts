@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import fg from "fast-glob";
 import matter from "gray-matter";
-import os from "os";
 import { getCachedNotes, setCachedNotes, isCacheFresh } from "./cache";
 
 const TAG_INLINE = /(^|\\s)#([A-Za-z0-9/_-]+)/g;
@@ -13,7 +12,7 @@ type CachedNote = {
   relativePath: string;
   title: string;
   tags: string[];
-  frontmatter: Record<string, any>;
+  frontmatter: Record<string, unknown>;
   mtimeMs: number;
 };
 
@@ -128,89 +127,6 @@ export async function writeCache(
   }
 }
 
-/**
- * Convert cached note to Note type with filters applied
- */
-function cachedNoteToNote(cached: CachedNote): Note {
-  const fm = cached.frontmatter;
-
-  return {
-    title: cached.title,
-    path: cached.path,
-    relativePath: cached.relativePath,
-    tags: cached.tags,
-    mtimeMs: cached.mtimeMs,
-    hasTodoTag: false, // Will be set by caller
-    hasProjectTag: false, // Will be set by caller
-    status:
-      typeof fm.status === "string"
-        ? fm.status.trim().toLowerCase()
-        : typeof fm.Status === "string"
-          ? fm.Status.trim().toLowerCase()
-          : undefined,
-    project:
-      typeof fm.project === "string"
-        ? fm.project.trim().replace(/^\[\[|\]\]$/g, "")
-        : typeof fm.Project === "string"
-          ? fm.Project.trim().replace(/^\[\[|\]\]$/g, "")
-          : undefined,
-    dateDue:
-      typeof fm.date_due === "string"
-        ? fm.date_due.trim()
-        : typeof fm.dateDue === "string"
-          ? fm.dateDue.trim()
-          : typeof fm.due_date === "string"
-            ? fm.due_date.trim()
-            : typeof fm.due === "string"
-              ? fm.due.trim()
-              : undefined,
-    dateStarted:
-      typeof fm.date_started === "string"
-        ? fm.date_started.trim()
-        : typeof fm.dateStarted === "string"
-          ? fm.dateStarted.trim()
-          : typeof fm.start_date === "string"
-            ? fm.start_date.trim()
-            : typeof fm.started === "string"
-              ? fm.started.trim()
-              : undefined,
-    dateScheduled:
-      typeof fm.date_scheduled === "string"
-        ? fm.date_scheduled.trim()
-        : typeof fm.dateScheduled === "string"
-          ? fm.dateScheduled.trim()
-          : typeof fm.scheduled === "string"
-            ? fm.scheduled.trim()
-            : undefined,
-    recurrence:
-      typeof fm.recurrence === "string" ? fm.recurrence.trim() : undefined,
-    recurrenceAnchor:
-      typeof fm.recurrence_anchor === "string"
-        ? fm.recurrence_anchor.trim()
-        : typeof fm.recurrenceAnchor === "string"
-          ? fm.recurrenceAnchor.trim()
-          : undefined,
-    priority:
-      typeof fm.priority === "string"
-        ? fm.priority.trim()
-        : typeof fm.Priority === "string"
-          ? fm.Priority.trim()
-          : undefined,
-    timeTracked:
-      typeof fm.time_tracked === "number"
-        ? fm.time_tracked
-        : typeof fm.timeTracked === "number"
-          ? fm.timeTracked
-          : undefined,
-    timeEstimate:
-      typeof fm.time_estimate === "number"
-        ? fm.time_estimate
-        : typeof fm.timeEstimate === "number"
-          ? fm.timeEstimate
-          : undefined,
-  };
-}
-
 export async function scanVault(opts: {
   vaultPath: string;
   todoTags: string[];
@@ -295,7 +211,9 @@ export async function scanVault(opts: {
             fs.stat(abs),
           ]);
           const parsed = matter(raw);
-          const fmTags = normalizeTags((parsed.data as any)?.tags);
+          const fmTags = normalizeTags(
+            (parsed.data as Record<string, unknown>)?.tags,
+          );
           const inlineTags = extractInlineTags(parsed.content);
           const tags = [...new Set([...fmTags, ...inlineTags])].map((t) =>
             t.toLowerCase(),
@@ -312,7 +230,7 @@ export async function scanVault(opts: {
 
           const title = extractTitle(
             parsed.content,
-            (parsed.data as any)?.title,
+            (parsed.data as Record<string, unknown>)?.title,
             path.parse(rel).name,
           );
 
@@ -328,14 +246,16 @@ export async function scanVault(opts: {
 
           // Extract status and project from frontmatter
           const rawStatus =
-            (parsed.data as any)?.status || (parsed.data as any)?.Status;
+            (parsed.data as Record<string, unknown>)?.status ||
+            (parsed.data as Record<string, unknown>)?.Status;
           const status =
             typeof rawStatus === "string"
               ? rawStatus.trim().toLowerCase()
               : undefined;
 
           const rawProject =
-            (parsed.data as any)?.project || (parsed.data as any)?.Project;
+            (parsed.data as Record<string, unknown>)?.project ||
+            (parsed.data as Record<string, unknown>)?.Project;
           const project =
             typeof rawProject === "string"
               ? rawProject.trim().replace(/^\[\[|\]\]$/g, "")
@@ -343,42 +263,43 @@ export async function scanVault(opts: {
 
           // Extract date fields from frontmatter (support various naming conventions)
           const rawDateDue =
-            (parsed.data as any)?.date_due ||
-            (parsed.data as any)?.dateDue ||
-            (parsed.data as any)?.due_date ||
-            (parsed.data as any)?.due;
+            (parsed.data as Record<string, unknown>)?.date_due ||
+            (parsed.data as Record<string, unknown>)?.dateDue ||
+            (parsed.data as Record<string, unknown>)?.due_date ||
+            (parsed.data as Record<string, unknown>)?.due;
           const dateDue =
             typeof rawDateDue === "string" ? rawDateDue.trim() : undefined;
 
           const rawDateStarted =
-            (parsed.data as any)?.date_started ||
-            (parsed.data as any)?.dateStarted ||
-            (parsed.data as any)?.start_date ||
-            (parsed.data as any)?.started;
+            (parsed.data as Record<string, unknown>)?.date_started ||
+            (parsed.data as Record<string, unknown>)?.dateStarted ||
+            (parsed.data as Record<string, unknown>)?.start_date ||
+            (parsed.data as Record<string, unknown>)?.started;
           const dateStarted =
             typeof rawDateStarted === "string"
               ? rawDateStarted.trim()
               : undefined;
 
           const rawDateScheduled =
-            (parsed.data as any)?.date_scheduled ||
-            (parsed.data as any)?.dateScheduled ||
-            (parsed.data as any)?.scheduled;
+            (parsed.data as Record<string, unknown>)?.date_scheduled ||
+            (parsed.data as Record<string, unknown>)?.dateScheduled ||
+            (parsed.data as Record<string, unknown>)?.scheduled;
           const dateScheduled =
             typeof rawDateScheduled === "string"
               ? rawDateScheduled.trim()
               : undefined;
 
           // Extract recurrence fields (TaskNotes 4.0.1 compatibility)
-          const rawRecurrence = (parsed.data as any)?.recurrence;
+          const rawRecurrence = (parsed.data as Record<string, unknown>)
+            ?.recurrence;
           const recurrence =
             typeof rawRecurrence === "string"
               ? rawRecurrence.trim()
               : undefined;
 
           const rawRecurrenceAnchor =
-            (parsed.data as any)?.recurrence_anchor ||
-            (parsed.data as any)?.recurrenceAnchor;
+            (parsed.data as Record<string, unknown>)?.recurrence_anchor ||
+            (parsed.data as Record<string, unknown>)?.recurrenceAnchor;
           const recurrenceAnchor =
             typeof rawRecurrenceAnchor === "string"
               ? rawRecurrenceAnchor.trim()
@@ -386,20 +307,21 @@ export async function scanVault(opts: {
 
           // Extract priority (alphabetical sorting as per TaskNotes 4.0.1)
           const rawPriority =
-            (parsed.data as any)?.priority || (parsed.data as any)?.Priority;
+            (parsed.data as Record<string, unknown>)?.priority ||
+            (parsed.data as Record<string, unknown>)?.Priority;
           const priority =
             typeof rawPriority === "string" ? rawPriority.trim() : undefined;
 
           // Extract time tracking fields
           const rawTimeTracked =
-            (parsed.data as any)?.time_tracked ||
-            (parsed.data as any)?.timeTracked;
+            (parsed.data as Record<string, unknown>)?.time_tracked ||
+            (parsed.data as Record<string, unknown>)?.timeTracked;
           const timeTracked =
             typeof rawTimeTracked === "number" ? rawTimeTracked : undefined;
 
           const rawTimeEstimate =
-            (parsed.data as any)?.time_estimate ||
-            (parsed.data as any)?.timeEstimate;
+            (parsed.data as Record<string, unknown>)?.time_estimate ||
+            (parsed.data as Record<string, unknown>)?.timeEstimate;
           const timeEstimate =
             typeof rawTimeEstimate === "number" ? rawTimeEstimate : undefined;
 
@@ -640,7 +562,9 @@ export async function scanProjects(
       try {
         const raw = await fs.readFile(abs, "utf8");
         const parsed = matter(raw);
-        const fmTags = normalizeTags((parsed.data as any)?.tags);
+        const fmTags = normalizeTags(
+          (parsed.data as Record<string, unknown>)?.tags,
+        );
         const inlineTags = extractInlineTags(parsed.content);
         const tags = [...new Set([...fmTags, ...inlineTags])].map((t) =>
           t.toLowerCase(),
@@ -736,7 +660,9 @@ async function detectFolderForTags(
         const abs = path.join(vaultPath, rel);
         const raw = await fs.readFile(abs, "utf8");
         const parsed = matter(raw);
-        const fmTags = normalizeTags((parsed.data as any)?.tags);
+        const fmTags = normalizeTags(
+          (parsed.data as Record<string, unknown>)?.tags,
+        );
         const inlineTags = extractInlineTags(parsed.content);
         const noteTags = [...new Set([...fmTags, ...inlineTags])].map((t) =>
           t.toLowerCase(),

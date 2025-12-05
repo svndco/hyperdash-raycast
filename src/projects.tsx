@@ -25,7 +25,6 @@ import {
 } from "./utils";
 import { readBaseConfig, evaluateWithView } from "./bases";
 import { clearVaultCache } from "./cache";
-import path from "path";
 
 type Prefs = {
   basesProjectFile: string;
@@ -91,7 +90,6 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
   const [searchText, setSearchText] = useState<string>("");
-  const [effectiveProject, setEffectiveProject] = useState<string>("");
 
   async function load(rebuildCache = false) {
     try {
@@ -134,15 +132,11 @@ export default function Command() {
       const projectTagFilters = projectConfig.filters.filter(
         (f) => f.property === "tags",
       );
-      setEffectiveProject(
-        projectTagFilters.flatMap((f) => f.values).join(", ") ||
-          "dynamic filters",
-      );
 
       // Scan the vault with inline filtering
       const projectViewName = prefs.projectViewName.trim();
 
-      const filterFn = (note: any) => {
+      const filterFn = (note: Note) => {
         // Apply filters during scan to avoid loading all files into memory
         const matchesProject = evaluateWithView(
           projectConfig,
@@ -186,11 +180,11 @@ export default function Command() {
         style: Toast.Style.Success,
         title: `✓ Loaded ${scanned.length} projects`,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to load",
-        message: String(e?.message ?? e),
+        message: String((e as Error)?.message ?? e),
       });
       setIsLoading(false);
     }
@@ -198,7 +192,6 @@ export default function Command() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleCreateProject() {
@@ -295,11 +288,11 @@ export default function Command() {
 
       // Clear cache in background so next reload gets fresh data
       clearVaultCache(projectConfig.vaultPath);
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to create project",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -572,11 +565,11 @@ function SetStatusForm({
       });
       onStatusUpdated();
       pop();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -629,11 +622,11 @@ function EditTitleForm({
       });
       pop();
       onTitleUpdated();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -711,18 +704,17 @@ function ProjectItem({
   ) {
     try {
       await updateNoteDate(note.path, field, date);
-      const message = date ? `Set to: ${date.toLocaleDateString()}` : "Cleared";
       await showToast({
         style: Toast.Style.Success,
         title: `${fieldLabel} Updated`,
         message: note.title,
       });
       onRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to update",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }
@@ -754,11 +746,11 @@ function ProjectItem({
       });
 
       onRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Failed to delete",
-        message: error.message,
+        message: String((error as Error)?.message ?? error),
       });
     }
   }

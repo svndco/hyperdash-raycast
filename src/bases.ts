@@ -71,6 +71,7 @@ export async function readBaseConfig(
 ): Promise<BaseConfig | null> {
   try {
     const raw = await fs.readFile(filePath, "utf8");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc = YAML.parse(raw) as any;
 
     const filters: FilterExpression[] = [];
@@ -176,26 +177,31 @@ async function findVaultRoot(baseFilePath: string): Promise<string | null> {
 /**
  * Evaluate a filter expression against a note
  */
-export function evaluateFilter(filter: FilterExpression, note: any): boolean {
+export function evaluateFilter(
+  filter: FilterExpression,
+  note: unknown,
+): boolean {
   const { property, operator, values } = filter;
 
   // Get the property value from the note
-  let noteValue: any;
+  let noteValue: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const noteObj = note as any;
 
   // Handle nested properties like "file.name", "file.folder"
   if (property.includes(".")) {
     const parts = property.split(".");
-    noteValue = note;
+    noteValue = noteObj;
     for (const part of parts) {
       if (noteValue && typeof noteValue === "object") {
-        noteValue = noteValue[part];
+        noteValue = (noteValue as Record<string, unknown>)[part];
       } else {
         noteValue = undefined;
         break;
       }
     }
   } else {
-    noteValue = note[property];
+    noteValue = noteObj[property];
   }
 
   // Convert noteValue to array for consistent handling
@@ -243,7 +249,7 @@ export function evaluateFilter(filter: FilterExpression, note: any): boolean {
 /**
  * Evaluate all filters against a note based on combineWith logic
  */
-export function evaluateAllFilters(config: BaseConfig, note: any): boolean {
+export function evaluateAllFilters(config: BaseConfig, note: unknown): boolean {
   if (config.filters.length === 0) return true;
 
   if (config.combineWith === "and") {
@@ -256,7 +262,7 @@ export function evaluateAllFilters(config: BaseConfig, note: any): boolean {
 /**
  * Evaluate filters from a specific view
  */
-export function evaluateViewFilters(view: BaseView, note: any): boolean {
+export function evaluateViewFilters(view: BaseView, note: unknown): boolean {
   if (view.filters.length === 0) return true;
 
   if (view.combineWith === "and") {
@@ -272,7 +278,7 @@ export function evaluateViewFilters(view: BaseView, note: any): boolean {
  */
 export function evaluateWithView(
   config: BaseConfig,
-  note: any,
+  note: unknown,
   viewName?: string,
 ): boolean {
   // First check base filters
